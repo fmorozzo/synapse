@@ -21,21 +21,17 @@ First Challenges:
     * Users/DJs I follow
     * Recommend from same label (Relation between labels -> Same artists on another label)
 
-
-
+<br />
 <h4>Back2Back DJ set</h4>
 
 Prepare your bag of records and combine the recommendations with your pal's collection. 
 
-
-
+<br />
 <h4>Base your recommendation system with the DJs/friends you want</h4>
 
 Tracks and relations coming from these clusters would be more likely recommended
 A cluster could be a group of people, a genre of music.
 
-
-
+<br />
 <h4>Recommend also tracks that are not (yet) in your collection :</h4>
-
-be a kind of Marketplace for Discogs and records shop
+<p>be a kind of Marketplace for Discogs and records shop</p>
