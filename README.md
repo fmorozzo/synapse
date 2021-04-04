@@ -35,3 +35,15 @@ A cluster could be a group of people, a genre of music.
 <br />
 <h4>Recommend also tracks that are not (yet) in your collection :</h4>
 <p>be a kind of Marketplace for Discogs and records shop</p>
+
+
+<br />
+<h4>Records locator</h4>
+<p>This app could also be used to order your physical library and help you to find the EPs</p>
+* Sort by :
+    * Artist
+    * Label
+    * Genre
+    * Release date
+    * ...
+      
