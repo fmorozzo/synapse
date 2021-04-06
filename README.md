@@ -40,12 +40,10 @@ A cluster could be a group of people, a genre of music.
 <br />
 <h4>Records locator</h4>
 <p>This app could also be used to order your physical library and help you to find the EPs</p>
+
 * Sort by :
     * Artist
     * Label
     * Genre
     * Release date
     * ...
-      
-
-      test
