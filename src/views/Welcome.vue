@@ -8,7 +8,7 @@
                     <p class="text-gray-500 dark:text-gray-400">Log in to access your account</p>
                 </div>
                 <div class="m-7">
-                    <login-form @login="enterDashboard" />
+                    <login-form @login="enterApp" />
                     <p class="text-sm text-center text-gray-400">Don&#x27;t have an account yet? <a href="javascript:void(0)" @click="showLogin = false" class="text-indigo-400 focus:outline-none focus:underline focus:text-indigo-500 dark:focus:border-indigo-800">Sign up</a>.</p>
                 </div>
             </div>
@@ -18,7 +18,7 @@
                     <p class="text-gray-500 dark:text-gray-400">Sign up to syart using synapse</p>
                 </div>
                 <div class="m-7">
-                    <signup-form  @signup="enterDashboard"/>
+                    <signup-form  @signup="enterApp"/>
                     <p class="text-sm text-center text-gray-400">Already have an account? <a href="javascript:void(0)" @click="showLogin = true" class="text-indigo-400 focus:outline-none focus:underline focus:text-indigo-500 dark:focus:border-indigo-800">Log in</a>.</p>
                 </div>
             </div>
@@ -46,10 +46,10 @@ export default {
         const showLogin = ref(true)
         const router = useRouter()
 
-        const enterDashboard = () => {
-            router.push({ name:'Dashboard' })
+        const enterApp = () => {
+            router.push('/collection')
         }
-        return { showLogin, enterDashboard }
+        return { showLogin, enterApp }
     }
 
 

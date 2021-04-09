@@ -1,9 +1,29 @@
 <template>
-  <div id="nav">
-    <router-link to="/"></router-link> 
+  <div class="min-h-screen bg-white">
+    <navbar />
+    <router-view/>
   </div>
-  <router-view/>
 </template>
 
-<style>
-</style>
+<script>
+import { watch } from '@vue/runtime-core'
+import { useRouter } from 'vue-router'
+import Navbar from './components/Navbar.vue'
+import getUser from './composables/getUser'
+
+export default {
+    components: {
+        Navbar
+    },
+    setup(){
+        const { user } = getUser()
+        const router = useRouter()
+
+        watch(user, () => {
+            if(!user.value){
+                router.push({name : 'Welcome'})
+            }
+        })
+    }
+}
+</script>

@@ -1,8 +1,7 @@
 
 <template>
-   <p class="my-5 text-gray-500 italic">Currently retrieving my collection from a airtable database.({{records.length}})</p>
-
-            <!-- This example requires Tailwind CSS v2.0+ -->
+<div v-if="records.length">
+<!-- This example requires Tailwind CSS v2.0+ -->
 <div class="bg-white shadow overflow-hidden sm:rounded-md">
   <ul class="divide-y divide-gray-200">
     <li v-for="record in records" :key="record.id">
@@ -45,41 +44,17 @@
     </li>
   </ul>
 </div>
-    
+    </div>
 </template>
 
 <script>
-import axios from 'axios';
 
 export default {
-  name: 'ListRecords',
-  data: function () {
-    return {
-      apiUrl: 'https://api.airtable.com/v0/',
-      apiKey: 'keyQKXuzuIIC7c8Ph', // Always use a read-only account token
-      appID:'app0Z70uYtVAdttHi',
-      base: '/Records',
-      sort: 'sort%5B0%5D%5Bfield%5D=Artist&sort%5B0%5D%5Bdirection%5D=asc',
-      formula: '',
-      records: []
-    };
+  props: {
+    records:{}
   },
-  mounted: function () {
-    this.getData();
-  },
-  methods: {
-    getData: function () {
-      axios({
-        url: this.apiUrl + this.appID + this.base + '?' + this.formula + '&' + this.sort,
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`
-        }
-      }).then((res) => {
-        this.records = res.data.records;
-        console.log (this.records)
-      });
-    }
-  }
+  name: 'RecordsList',
+  
 }        
 </script>
 

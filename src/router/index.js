@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Welcome from '../views/Welcome.vue'
-import Dashboard from '../views/Dashboard.vue'
+import MyCollection from '../views/MyCollection.vue'
+import Relations from '../views/Relations.vue'
+import SearchPage from '../views/SearchPage.vue'
 import { projectAuth } from '../firebase/config'
 
 //Auth guard
@@ -21,9 +23,21 @@ const routes = [
     component: Welcome
   },
   {
-    path: '/dashboard',
-    name: 'Dashboard',
-    component: Dashboard,
+    path: '/collection',
+    name: 'MyCollection',
+    component: MyCollection,
+    beforeEnter: requireAuth
+  },
+  {
+    path: '/relations',
+    name: 'Relations',
+    component: Relations,
+    beforeEnter: requireAuth
+  },
+  {
+    path: '/search',
+    name: 'SearchPage',
+    component: SearchPage,
     beforeEnter: requireAuth
   }
 ]

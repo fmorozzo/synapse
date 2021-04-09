@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@tailwindcss/postcss7-compat": "^2.1.0",
+    "airtable": "^0.10.1",
     "autoprefixer": "^9.8.6",
     "axios": "^0.21.1",
     "core-js": "^3.6.5",
