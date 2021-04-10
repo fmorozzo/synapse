@@ -1,9 +1,9 @@
 <template>
-    <div class="py-10 bg-gray-100">
+  <div class="py-10">
     <header>
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 class="text-3xl font-bold leading-tight text-gray-900">
-          My collection
+          Record details :
         </h1>
       </div>
     </header>
@@ -12,25 +12,19 @@
         <!-- Replace with your content -->
         <div class="px-4 py-8 sm:px-0">
 
-            <list-records />
-
+            
         </div>
         <!-- /End replace -->
       </div>
     </main>
   </div>
-
 </template>
 
 <script>
-import ListRecords from '../components/ListRecords'
-
+import { ref } from '@vue/reactivity';
 export default {
-    components: {
-      ListRecords
-    },
-    setup(){
-    }
+  setup(props){
+  }
 }
 </script>
 

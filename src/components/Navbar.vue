@@ -10,9 +10,9 @@
           </div>
           <div class="hidden sm:-my-px sm:ml-6 sm:flex sm:space-x-8">
             <!-- Current: "border-indigo-500 text-gray-900", Default: "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700" -->
-            <router-link to="/collection" class="border-indigo-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Collection</router-link>
-            <router-link to="/relations" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Relations</router-link>
-            <router-link to="/search" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Search</router-link>
+            <router-link to="/collection" class="router-link">Collection</router-link>
+            <router-link to="/relations" class="router-link">Relations</router-link>
+            <router-link to="/search" class="router-link">Search</router-link>
           </div>
         </div>
         <div class="hidden sm:ml-6 sm:flex sm:items-center">
@@ -52,7 +52,7 @@
                 Settings
               </a>
 
-              <a @click="handleClick" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
+              <a href="javascript:void(0)" @click="handleClick" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
                 Sign out
               </a>
             </div>
@@ -117,7 +117,7 @@
             Settings
           </a>
 
-          <button  @click="handleClick" class="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">
+          <button href="javascript:void(0)"  @click="handleClick" class="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">
             Sign out
           </button>
         </div>

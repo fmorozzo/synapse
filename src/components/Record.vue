@@ -1,13 +1,6 @@
-
 <template>
-<p class="my-5 text-gray-500 italic">Currently retrieving my collection from a airtable database.({{records.length}})</p>
-<div v-if="records.length">
-<!-- This example requires Tailwind CSS v2.0+ -->
-<div class="bg-white shadow overflow-hidden sm:rounded-md">
-  <ul class="divide-y divide-gray-200">
-    <li v-for="record in records" :key="record.id" @click="goto">
-
-      <router-link :to="{name: 'RecordDetails', params: { id: record.fields.release_id }}" class="block hover:bg-gray-50">
+  <li v-for="record in records" :key="record.id">
+      <a href="#" class="block hover:bg-gray-50">
         <div class="flex items-center px-4 py-4 sm:px-6">
           <div class="min-w-0 flex-1 flex items-center">
             <div class="flex-shrink-0">
@@ -42,22 +35,16 @@
             </svg>
           </div>
         </div>
-      </router-link>
+      </a>
     </li>
-  </ul>
-</div>
-    </div>
 </template>
 
 <script>
-
 export default {
-  props: {
-    records:{}
-  },
-  name: 'RecordsList',
-  
-}        
+    name: 'Record',
+    props:{records}
+
+}
 </script>
 
 <style>

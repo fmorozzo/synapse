@@ -3,6 +3,7 @@ import Welcome from '../views/Welcome.vue'
 import MyCollection from '../views/MyCollection.vue'
 import Relations from '../views/Relations.vue'
 import SearchPage from '../views/SearchPage.vue'
+import RecordDetails from '../views/RecordDetails.vue'
 import { projectAuth } from '../firebase/config'
 
 //Auth guard
@@ -39,7 +40,13 @@ const routes = [
     name: 'SearchPage',
     component: SearchPage,
     beforeEnter: requireAuth
-  }
+  },
+  {
+    path: '/records/:id',
+    name: 'RecordDetails',
+    component: RecordDetails,
+    props: true
+  },
 ]
 
 const router = createRouter({
