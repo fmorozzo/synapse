@@ -19,7 +19,6 @@ const signup = async (email, password, displayName) => {
         console.log(err.message)
         error.value = err.message
     }
-
 }
 const useSignup = () => {
 
