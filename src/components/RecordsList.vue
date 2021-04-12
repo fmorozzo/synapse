@@ -7,7 +7,7 @@
   <ul class="divide-y divide-gray-200">
     <li v-for="record in records" :key="record.id" @click="goto">
 
-      <router-link :to="{name: 'RecordDetails', params: { id: record.fields.release_id }}" class="block hover:bg-gray-50">
+      <router-link :to="{name: 'RecordDetails', params: { releaseID: record.fields.release_id, recordTitle: record.fields.Title }}" class="block hover:bg-gray-50">
         <div class="flex items-center px-4 py-4 sm:px-6">
           <div class="min-w-0 flex-1 flex items-center">
             <div class="flex-shrink-0">

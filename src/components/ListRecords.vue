@@ -59,8 +59,7 @@ export default {
       apiKey: 'keyQKXuzuIIC7c8Ph', // Always use a read-only account token
       appID:'app0Z70uYtVAdttHi',
       base: '/Records',
-      sort: 'sort%5B0%5D%5Bfield%5D=Artist&sort%5B0%5D%5Bdirection%5D=asc',
-      formula: '',
+      sort: 'sort%5B0%5D%5Bdirection%5D=asc&sort%5B0%5D%5Bfield%5D=Artist',
       records: []
     };
   },
@@ -70,7 +69,7 @@ export default {
   methods: {
     getData: function () {
       axios({
-        url: this.apiUrl + this.appID + this.base + '?' + this.formula + '&' + this.sort,
+        url: this.apiUrl + this.appID + this.base + '?' + this.sort,
         headers: {
           'Authorization': `Bearer ${this.apiKey}`
         }

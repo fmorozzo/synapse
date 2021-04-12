@@ -42,7 +42,7 @@ const routes = [
     beforeEnter: requireAuth
   },
   {
-    path: '/records/:id',
+    path: '/records/:releaseID',
     name: 'RecordDetails',
     component: RecordDetails,
     props: true
