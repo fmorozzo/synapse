@@ -41,7 +41,7 @@
 </template>
 
 <script>
-import RecordsList from './RecordsList.vue';
+import RecordsList from './RecordsList.vue'
 import getRecords from '../composables/getRecords'
 import { ref } from '@vue/reactivity';
 

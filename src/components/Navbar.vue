@@ -13,6 +13,9 @@
             <router-link to="/collection" class="router-link">Collection</router-link>
             <router-link to="/relations" class="router-link">Relations</router-link>
             <router-link to="/search" class="router-link">Search</router-link>
+            <router-link to="/tracks" class="router-link">Tracks</router-link>
+            <router-link to="/records" class="router-link">Records</router-link>
+           <router-link to="/details" class="router-link">Details</router-link>
           </div>
         </div>
         <div class="hidden sm:ml-6 sm:flex sm:items-center">
@@ -90,6 +93,7 @@
         <router-link to="/collection" class="bg-indigo-50 border-indigo-500 text-indigo-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium">Collection</router-link>
         <router-link to="/relations" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Relations</router-link>
         <router-link to="/search" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Search</router-link>
+        <router-link to="/tracks" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Records</router-link>
       </div>
       <div class="pt-4 pb-3 border-t border-gray-200">
         <div class="flex items-center px-4">
