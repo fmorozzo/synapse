@@ -9,6 +9,7 @@
   "dependencies": {
     "@headlessui/vue": "^1.0.0",
     "@heroicons/vue": "^1.0.1",
+    "@tailwindcss/forms": "^0.3.2",
     "@tailwindcss/postcss7-compat": "^2.1.0",
     "airtable": "^0.10.1",
     "autoprefixer": "^9.8.6",
