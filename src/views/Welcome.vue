@@ -1,5 +1,5 @@
 <template>
-  <div class="welcome">
+<!-- Welcome -->
       <div class="flex items-center min-h-screen bg-white dark:bg-gray-900">
         <div class="container mx-auto">
             <div v-if="showLogin" class="max-w-md mx-auto my-10">
@@ -24,13 +24,6 @@
             </div>
         </div>
     </div>
-  </div>
-
-
-
-
-
-
 </template>
 
 <script>

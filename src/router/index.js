@@ -1,12 +1,15 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Welcome from '../views/Welcome.vue'
-import MyCollection from '../views/MyCollection.vue'
-import Relations from '../views/Relations.vue'
 import SearchPage from '../views/SearchPage.vue'
 import Records from '../views/Records.vue'
-import Tracks from '../views/Tracks.vue'
-import Details from '../views/Details.vue'
-import RecordDetails from '../views/RecordDetails.vue'
+import Dashboard from '../views/Dashboard.vue'
+import Circles from '../views/Circles.vue'
+import Charts from '../views/Charts.vue'
+import Marketplace from '../views/Marketplace.vue'
+import MyCollection from '../views/MyCollection.vue'
+import Account from '../views/settings/Account.vue'
+import Notifications from '../views/settings/Notifications.vue'
+import Settings from '../views/Settings.vue'
 import { projectAuth } from '../firebase/config'
 
 //Auth guard
@@ -27,9 +30,9 @@ const routes = [
     component: Welcome
   },
   {
-    path: '/details',
-    name: 'Details',
-    component: Details
+    path: '/dashboard',
+    name: 'Dashboard',
+    component: Dashboard
   },
   {
     path: '/collection',
@@ -38,15 +41,19 @@ const routes = [
     beforeEnter: requireAuth
   },
   {
-    path: '/tracks',
-    name: 'Tracks',
-    component: Tracks
+    path: '/circles',
+    name: 'Circles',
+    component: Circles
   },
   {
-    path: '/relations',
-    name: 'Relations',
-    component: Relations,
-    beforeEnter: requireAuth
+    path: '/charts',
+    name: 'Charts',
+    component: Charts
+  },
+  {
+    path: '/marketplace',
+    name: 'Marketplace',
+    component: Marketplace
   },
   {
     path: '/search',
@@ -61,10 +68,27 @@ const routes = [
     props: true
   },
   {
-    path: '/records/:releaseID',
-    name: 'RecordDetails',
-    component: RecordDetails,
-    props: true
+    path: '/settings',
+    name: 'Settings',
+    component: Settings,
+    props: true,
+    children: [
+      {
+        path: '',
+        name: 'Account',
+        component: Account
+      },
+      {
+        path: 'account',
+        name: 'Account',
+        component: Account
+      },
+      {
+        path: 'notifications',
+        name: 'Notifications',
+        component: Notifications
+      }
+    ]
   }
 ]
 
