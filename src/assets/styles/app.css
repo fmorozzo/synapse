@@ -2,13 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
-/*
+
 @layer components {
     .router-link {
-      @apply border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium;
+      @apply text-gray-600 hover:bg-gray-50 hover:text-pink-500 group flex items-center px-2 py-2 text-sm font-medium rounded-md;
     }
     .router-link-active,
     .router-link-exact-active {
-      @apply border-indigo-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium;
+      @apply text-pink-600;
     }
-  }*/
+    .router-link-active component,
+    .router-link-exact-active component{
+      @apply text-pink-500;
+    }
+  }

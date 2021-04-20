@@ -21,7 +21,7 @@
           <nav class="flex items-start px-4 py-3 sm:px-6 lg:px-8 xl:hidden" aria-label="Breadcrumb">
             <a href="#" class="inline-flex items-center space-x-3 text-sm font-medium text-gray-900">
               <ChevronLeftIcon class="-ml-2 h-5 w-5 text-gray-400" aria-hidden="true" />
-              <span>Records</span>
+              <span>My Collection</span>
             </a>
           </nav>
 
@@ -145,7 +145,7 @@
         </main>
         <aside class="hidden xl:order-first xl:flex xl:flex-col flex-shrink-0 w-96 border-r border-gray-200">
           <div class="px-6 pt-6 pb-4">
-            <h2 class="text-lg font-medium text-gray-900">Records</h2>
+            <h2 class="text-lg font-medium text-gray-900">My Collection</h2>
             <p class="mt-1 text-sm text-gray-600">
               Search 226 records
             </p>

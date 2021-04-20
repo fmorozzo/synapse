@@ -11,15 +11,15 @@
             </div>
             <nav class="mt-5 flex-1" aria-label="Sidebar">
               <div class="px-2 space-y-1">
-                <router-link v-for="item in navigation" :key="item.name" :to="item.href" :class="[item.current ? 'bg-gray-200 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900', 'group flex items-center px-2 py-2 text-sm font-medium rounded-md']" :aria-current="item.current ? 'page' : undefined">
-                  <component :is="item.icon" :class="[item.current ? 'text-gray-500' : 'text-gray-400 group-hover:text-gray-500', 'mr-3 h-6 w-6']" aria-hidden="true" />
+                <router-link v-for="item in navigation" :key="item.name" :to="item.href" class="router-link" :aria-current="item.current ? 'page' : undefined">
+                  <component :is="item.icon" class="mr-3 h-6 w-6" aria-hidden="true" />
                   {{ item.name }}
                 </router-link>
               </div>
               <hr class="border-t border-gray-200 my-5" aria-hidden="true" />
               <div class="flex-1 px-2 space-y-1">
-                <router-link v-for="item in secondaryNavigation" :key="item.name" :to="item.href" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
-                  <component :is="item.icon" class="text-gray-400 group-hover:text-gray-500 mr-3 h-6 w-6" aria-hidden="true" />
+                <router-link v-for="item in secondaryNavigation" :key="item.name" :to="item.href" class="router-link">
+                  <component :is="item.icon" class="mr-3 h-6 w-6" aria-hidden="true" />
                   {{ item.name }}
                 </router-link>
               </div>
