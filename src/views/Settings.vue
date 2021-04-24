@@ -69,14 +69,9 @@ import {
   BookmarkAltIcon,
   CashIcon,
   CogIcon,
-  FireIcon,
-  HomeIcon,
-  InboxIcon,
-  KeyIcon,
   MenuIcon,
   PhotographIcon,
   SearchCircleIcon,
-  UserIcon,
   ViewGridAddIcon,
   XIcon,
 } from '@heroicons/vue/outline'
@@ -115,14 +110,14 @@ const subNavigation = [
   },
   {
     name: 'Integrations',
-    description: 'Nisi, elit volutpat odio urna quis arcu faucibus dui. Mauris adipiscing pellentesque.',
+    description: 'Connect to your Discogs account, Rekordbox, Traktor or Serato libraries.',
     href: '#',
     icon: ViewGridAddIcon,
     current: false,
   },
   {
-    name: 'Additional Resources',
-    description: 'Quis viverra netus donec ut auctor fringilla facilisis. Nunc sit donec cursus sit quis et.',
+    name: 'Storage config',
+    description: 'Set your shelves to organise your physical library.',
     href: '#',
     icon: SearchCircleIcon,
     current: false,
@@ -144,8 +139,8 @@ export default {
   setup() {
     const mobileMenuOpen = ref(false)
     const subNavigate = (item) => {
-      
     }
+    
     return {
       subNavigation,
       mobileMenuOpen,

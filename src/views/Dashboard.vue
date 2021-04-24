@@ -266,7 +266,7 @@ import {
   MenuItem,
   MenuItems,
   TransitionChild,
-  TransitionRoot,
+  TransitionRoot
 } from '@headlessui/vue'
 import {
   BellIcon,
@@ -283,7 +283,7 @@ import {
   XIcon,
   CursorClickIcon,
   UsersIcon,
-  MailOpenIcon
+  MailOpenIcon,
 } from '@heroicons/vue/outline'
 import {
   CashIcon,
@@ -292,6 +292,8 @@ import {
   ChevronRightIcon,
   OfficeBuildingIcon,
   SearchIcon,
+  ArrowSmDownIcon,
+  ArrowSmUpIcon,
 } from '@heroicons/vue/solid'
 
 const navigation = [
@@ -354,7 +356,7 @@ export default {
     MenuAlt1Icon,
     OfficeBuildingIcon,
     SearchIcon,
-    XIcon,
+    XIcon
   },
   setup() {
     const sidebarOpen = ref(false)
@@ -366,7 +368,7 @@ export default {
       transactions,
       statusStyles,
       sidebarOpen,
-      stats
+      stats,
     }
   },
 }

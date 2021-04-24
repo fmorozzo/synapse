@@ -27,12 +27,13 @@ const routes = [
   {
     path: '/',
     name: 'Welcome',
-    component: Welcome
+    component: Welcome,
   },
   {
     path: '/dashboard',
     name: 'Dashboard',
-    component: Dashboard
+    component: Dashboard,
+    beforeEnter: requireAuth
   },
   {
     path: '/collection',
@@ -43,17 +44,20 @@ const routes = [
   {
     path: '/circles',
     name: 'Circles',
-    component: Circles
+    component: Circles,
+    beforeEnter: requireAuth
   },
   {
     path: '/charts',
     name: 'Charts',
-    component: Charts
+    component: Charts,
+    beforeEnter: requireAuth
   },
   {
     path: '/marketplace',
     name: 'Marketplace',
-    component: Marketplace
+    component: Marketplace,
+    beforeEnter: requireAuth
   },
   {
     path: '/search',
@@ -65,28 +69,33 @@ const routes = [
     path: '/records',
     name: 'Records',
     component: Records,
-    props: true
+    props: true,
+    beforeEnter: requireAuth
   },
   {
     path: '/settings',
     name: 'Settings',
     component: Settings,
     props: true,
+    beforeEnter: requireAuth,
     children: [
       {
         path: '',
         name: 'Account',
-        component: Account
+        component: Account,
+        beforeEnter: requireAuth
       },
       {
         path: 'account',
         name: 'Account',
-        component: Account
+        component: Account,
+        beforeEnter: requireAuth
       },
       {
         path: 'notifications',
         name: 'Notifications',
-        component: Notifications
+        component: Notifications,
+        beforeEnter: requireAuth
       }
     ]
   }

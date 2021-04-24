@@ -15,14 +15,14 @@
                       <label for="first_name" class="block text-sm font-medium text-gray-900">
                         First name
                       </label>
-                      <input type="text" name="first_name" id="first_name" autocomplete="given-name" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-gray-900 sm:text-sm focus:ring-blue-500 focus:border-blue-500" />
+                      <input v-model="displayName" type="text" name="first_name" id="first_name" autocomplete="given-name" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-gray-900 sm:text-sm focus:ring-blue-500 focus:border-blue-500" />
                     </div>
 
                     <div class="sm:col-span-3">
                       <label for="last_name" class="block text-sm font-medium text-gray-900">
                         Last name
                       </label>
-                      <input type="text" name="last_name" id="last_name" autocomplete="family-name" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-gray-900 sm:text-sm focus:ring-blue-500 focus:border-blue-500" />
+                      <input v-model="displayName" type="text" name="last_name" id="last_name" autocomplete="family-name" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-gray-900 sm:text-sm focus:ring-blue-500 focus:border-blue-500" />
                     </div>
 
                     <div class="sm:col-span-6">
@@ -31,9 +31,9 @@
                       </label>
                       <div class="mt-1 flex rounded-md shadow-sm">
                         <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
-                          workcation.com/
+                          synapse.com/
                         </span>
-                        <input type="text" name="username" id="username" autocomplete="username" value="lisamarie" class="flex-1 block w-full min-w-0 border-gray-300 rounded-none rounded-r-md text-gray-900 sm:text-sm focus:ring-blue-500 focus:border-blue-500" />
+                        <input type="text" name="username" id="username" autocomplete="username" v-model="displayName" class="flex-1 block w-full min-w-0 border-gray-300 rounded-none rounded-r-md text-gray-900 sm:text-sm focus:ring-blue-500 focus:border-blue-500" />
                       </div>
                     </div>
 
@@ -86,7 +86,7 @@
                       <label for="email_address" class="block text-sm font-medium text-gray-900">
                         Email address
                       </label>
-                      <input type="text" name="email_address" id="email_address" autocomplete="email" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-gray-900 sm:text-sm focus:ring-blue-500 focus:border-blue-500" />
+                      <input v-model="email" type="text" name="email_address" id="email_address" autocomplete="email" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-gray-900 sm:text-sm focus:ring-blue-500 focus:border-blue-500" />
                     </div>
 
                     <div class="sm:col-span-3">
@@ -125,8 +125,22 @@
 </template>
 
 <script>
+import { ref } from '@vue/reactivity'
+import getUser from '../../composables/getUser'
 export default {
-
+  setup(){
+    const displayName = ref("")
+    const email = ref("")
+    const firstName = ref("")
+    const { user } = getUser()
+    displayName.value = user.value.displayName
+    email.value = user.value.email
+    return {
+      user,
+      displayName,
+      email
+    }
+  }
 }
 </script>
 

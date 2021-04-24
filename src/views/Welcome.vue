@@ -40,7 +40,7 @@ export default {
         const router = useRouter()
 
         const enterApp = () => {
-            router.push('/collection')
+            router.push('/dashboard')
         }
         return { showLogin, enterApp }
     }
