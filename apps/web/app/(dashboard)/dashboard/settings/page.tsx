@@ -9,7 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
-import { User, Music2, CheckCircle, ExternalLink } from 'lucide-react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { User, Music2, CheckCircle, ExternalLink, HelpCircle, ArrowRight } from 'lucide-react';
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
@@ -201,24 +202,158 @@ export default function SettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <Alert>
-                <AlertTitle>How to get your Discogs credentials:</AlertTitle>
-                <AlertDescription className="space-y-2 mt-2">
-                  <p>1. Go to your Discogs settings: 
-                    <a 
-                      href="https://www.discogs.com/settings/developers" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-purple-600 hover:underline ml-1"
-                    >
-                      Developer Settings
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
-                  </p>
-                  <p>2. Click "Generate new token"</p>
-                  <p>3. Copy your username and token below</p>
-                </AlertDescription>
-              </Alert>
+              {/* Help Section */}
+              <Accordion type="single" collapsible className="w-full border rounded-lg">
+                <AccordionItem value="help" className="border-none">
+                  <AccordionTrigger className="px-4 hover:no-underline hover:bg-muted/50">
+                    <div className="flex items-center gap-2">
+                      <HelpCircle className="w-5 h-5 text-purple-600" />
+                      <span className="font-semibold">How to get your Discogs token (click to expand)</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    <div className="space-y-4 text-sm">
+                      <Alert className="bg-blue-50 border-blue-200">
+                        <AlertDescription className="text-blue-900">
+                          <strong>Don't have a Discogs account?</strong> Create one first at{' '}
+                          <a 
+                            href="https://www.discogs.com/users/create" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="underline font-medium"
+                          >
+                            discogs.com/users/create
+                          </a>
+                        </AlertDescription>
+                      </Alert>
+
+                      <div className="space-y-3">
+                        <h4 className="font-semibold text-base">Step-by-Step Guide:</h4>
+                        
+                        {/* Step 1 */}
+                        <div className="flex gap-3 p-3 bg-muted rounded-lg">
+                          <div className="flex-shrink-0 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                            1
+                          </div>
+                          <div className="space-y-2 flex-1">
+                            <p className="font-medium">Go to Discogs Developer Settings</p>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="gap-2"
+                              onClick={() => window.open('https://www.discogs.com/settings/developers', '_blank')}
+                            >
+                              Open Discogs Developer Settings
+                              <ExternalLink className="w-3 h-3" />
+                            </Button>
+                            <p className="text-xs text-muted-foreground">
+                              This will open in a new tab. You may need to log in to Discogs first.
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Step 2 */}
+                        <div className="flex gap-3 p-3 bg-muted rounded-lg">
+                          <div className="flex-shrink-0 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                            2
+                          </div>
+                          <div className="space-y-2 flex-1">
+                            <p className="font-medium">Find "Personal Access Tokens" section</p>
+                            <p className="text-muted-foreground">
+                              Scroll down the page until you see the "Personal Access Tokens" heading.
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Step 3 */}
+                        <div className="flex gap-3 p-3 bg-muted rounded-lg">
+                          <div className="flex-shrink-0 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                            3
+                          </div>
+                          <div className="space-y-2 flex-1">
+                            <p className="font-medium">Generate a new token</p>
+                            <p className="text-muted-foreground">
+                              Click the <strong>"Generate new token"</strong> button.
+                            </p>
+                            <p className="text-muted-foreground">
+                              Give it a name like: <code className="bg-background px-2 py-1 rounded">Synapse App</code>
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Step 4 */}
+                        <div className="flex gap-3 p-3 bg-muted rounded-lg">
+                          <div className="flex-shrink-0 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                            4
+                          </div>
+                          <div className="space-y-2 flex-1">
+                            <p className="font-medium">Copy your token</p>
+                            <p className="text-muted-foreground">
+                              A long string of characters will appear. Click to copy it - you'll only see this once!
+                            </p>
+                            <div className="bg-yellow-50 border border-yellow-200 p-2 rounded text-xs">
+                              ⚠️ <strong>Important:</strong> Copy it immediately! You can't view it again later.
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Step 5 */}
+                        <div className="flex gap-3 p-3 bg-muted rounded-lg">
+                          <div className="flex-shrink-0 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                            5
+                          </div>
+                          <div className="space-y-2 flex-1">
+                            <p className="font-medium">Get your Discogs username</p>
+                            <p className="text-muted-foreground">
+                              Your username is in your profile URL: <code className="bg-background px-2 py-1 rounded">discogs.com/user/YOUR_USERNAME</code>
+                            </p>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="gap-2"
+                              onClick={() => window.open('https://www.discogs.com/settings/profile', '_blank')}
+                            >
+                              View My Profile
+                              <ExternalLink className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Step 6 */}
+                        <div className="flex gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                          <div className="flex-shrink-0 w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                            6
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium text-green-900">Paste both below and connect!</p>
+                            <p className="text-green-700 text-xs mt-1">
+                              Fill in the form below with your username and token, then click "Connect Discogs"
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <Separator />
+
+                      <div className="text-xs text-muted-foreground space-y-1">
+                        <p><strong>Need help?</strong> Watch this video tutorial: 
+                          <a 
+                            href="https://support.discogs.com/hc/en-us/articles/360009114953-How-To-Generate-A-Personal-Access-Token" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-purple-600 hover:underline ml-1"
+                          >
+                            Discogs Official Guide
+                            <ExternalLink className="w-3 h-3 inline ml-1" />
+                          </a>
+                        </p>
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
 
               <form onSubmit={handleSaveDiscogs} className="space-y-4">
                 <div className="space-y-2">
