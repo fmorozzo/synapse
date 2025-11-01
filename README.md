@@ -57,7 +57,7 @@ synapse/
 
 - Node.js 18+ and pnpm 8+
 - Supabase account (free tier available)
-- Discogs API credentials
+- Discogs OAuth application (for user authentication)
 - OpenAI API key (optional, for AI features)
 
 ### Installation
@@ -84,9 +84,9 @@ NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 
-# Discogs
-DISCOGS_API_KEY=your_discogs_api_key
-DISCOGS_API_SECRET=your_discogs_api_secret
+# Discogs OAuth (for user authentication)
+DISCOGS_CONSUMER_KEY=your_discogs_consumer_key
+DISCOGS_CONSUMER_SECRET=your_discogs_consumer_secret
 
 # OpenAI
 OPENAI_API_KEY=your_openai_api_key
@@ -159,6 +159,9 @@ The web app provides these API endpoints:
 - **Discogs**
   - `GET /api/discogs/search` - Search for releases
   - `GET /api/discogs/release/[id]` - Get release details
+  - `GET /api/discogs/oauth/initiate` - Start OAuth flow
+  - `GET /api/discogs/oauth/callback` - OAuth callback handler
+  - `POST /api/discogs/oauth/disconnect` - Disconnect Discogs account
 
 - **Records**
   - `GET /api/records` - Get user's records
@@ -179,6 +182,12 @@ The database includes these tables:
 - **`records`** - User's music collection records
 
 See `packages/supabase/src/migrations/001_initial_schema.sql` for the full schema.
+
+### Setup Guides
+
+- **[Discogs OAuth Setup](./DISCOGS_OAUTH_SETUP.md)** - Complete guide for setting up Discogs authentication
+- **[Authentication Setup](./AUTHENTICATION_SETUP.md)** - Supabase email configuration
+- **[Push to GitHub](./PUSH_TO_GITHUB.md)** - Guide for connecting to GitHub
 
 ## 🔧 Development
 
@@ -256,8 +265,9 @@ eas submit --platform ios
 ## 📱 Features Roadmap
 
 ### Current Features
-- ✅ User authentication
-- ✅ Discogs search and integration
+- ✅ User authentication (Supabase Auth)
+- ✅ Discogs OAuth integration (secure account linking)
+- ✅ Discogs search and release data
 - ✅ Collection management (CRUD)
 - ✅ AI-powered album analysis
 - ✅ Personalized recommendations

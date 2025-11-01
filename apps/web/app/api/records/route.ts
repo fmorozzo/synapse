@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
 
     // Get all records
     const records = await getUserRecords(supabase, user.id);
-    return NextResponse.json(records);
+    return NextResponse.json({ records });
   } catch (error) {
     console.error('Get records error:', error);
     return NextResponse.json(

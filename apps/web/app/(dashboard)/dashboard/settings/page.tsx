@@ -1,18 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { User, Music2, CheckCircle, ExternalLink, HelpCircle, ArrowRight } from 'lucide-react';
+import { User, Music2, CheckCircle, ExternalLink, Link as LinkIcon, XCircle } from 'lucide-react';
 
 export default function SettingsPage() {
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -23,12 +23,28 @@ export default function SettingsPage() {
   
   // Discogs state
   const [discogsUsername, setDiscogsUsername] = useState('');
-  const [discogsToken, setDiscogsToken] = useState('');
   const [discogsConnected, setDiscogsConnected] = useState(false);
+  const [disconnecting, setDisconnecting] = useState(false);
 
   useEffect(() => {
     loadProfile();
-  }, []);
+    
+    // Check for OAuth callback status
+    const discogsStatus = searchParams.get('discogs');
+    const errorParam = searchParams.get('error');
+    const errorDetails = searchParams.get('details');
+    
+    if (discogsStatus === 'connected') {
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 5000);
+    } else if (errorParam) {
+      const errorMessage = errorDetails 
+        ? `Failed to connect to Discogs: ${errorDetails}` 
+        : 'Failed to connect to Discogs. Please try again.';
+      setError(errorMessage);
+      setTimeout(() => setError(''), 10000);
+    }
+  }, [searchParams]);
 
   async function loadProfile() {
     try {
@@ -71,34 +87,36 @@ export default function SettingsPage() {
     }
   }
 
-  async function handleSaveDiscogs(e: React.FormEvent) {
-    e.preventDefault();
+  function handleConnectDiscogs() {
+    // Redirect to OAuth initiation endpoint
+    window.location.href = '/api/discogs/oauth/initiate';
+  }
+
+  async function handleDisconnectDiscogs() {
+    if (!confirm('Are you sure you want to disconnect your Discogs account?')) {
+      return;
+    }
+
     setError('');
-    setSuccess(false);
-    setLoading(true);
+    setDisconnecting(true);
 
     try {
-      const response = await fetch('/api/profile', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          discogs_username: discogsUsername,
-          discogs_token: discogsToken,
-        }),
+      const response = await fetch('/api/discogs/oauth/disconnect', {
+        method: 'POST',
       });
 
       if (!response.ok) {
-        throw new Error('Failed to save Discogs settings');
+        throw new Error('Failed to disconnect Discogs');
       }
 
-      const data = await response.json();
-      setDiscogsConnected(data.discogs_connected);
+      setDiscogsConnected(false);
+      setDiscogsUsername('');
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
       setError(err.message);
     } finally {
-      setLoading(false);
+      setDisconnecting(false);
     }
   }
 
@@ -198,220 +216,139 @@ export default function SettingsPage() {
                 )}
               </CardTitle>
               <CardDescription>
-                Connect your Discogs account to import your collection
+                Connect your Discogs account to import and sync your collection
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Help Section */}
-              <Accordion type="single" collapsible className="w-full border rounded-lg">
-                <AccordionItem value="help" className="border-none">
-                  <AccordionTrigger className="px-4 hover:no-underline hover:bg-muted/50">
-                    <div className="flex items-center gap-2">
-                      <HelpCircle className="w-5 h-5 text-purple-600" />
-                      <span className="font-semibold">How to get your Discogs token (click to expand)</span>
+              {!discogsConnected ? (
+                // Not Connected State
+                <>
+                  <Alert className="bg-blue-50 border-blue-200">
+                    <LinkIcon className="h-4 w-4 text-blue-600" />
+                    <AlertTitle className="text-blue-900">Quick & Secure Connection</AlertTitle>
+                    <AlertDescription className="text-blue-800">
+                      Click the button below to securely connect your Discogs account. You'll be redirected to Discogs to authorize this app, then brought back here automatically.
+                    </AlertDescription>
+                  </Alert>
+
+                  <div className="flex flex-col items-center justify-center py-8 px-4 space-y-6">
+                    <div className="text-center space-y-2">
+                      <Music2 className="w-16 h-16 text-muted-foreground mx-auto" />
+                      <h3 className="text-xl font-semibold">Connect to Discogs</h3>
+                      <p className="text-muted-foreground max-w-md">
+                        Link your Discogs account to import your collection, sync your wantlist, and get personalized recommendations.
+                      </p>
                     </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-4 pb-4">
-                    <div className="space-y-4 text-sm">
-                      <Alert className="bg-blue-50 border-blue-200">
-                        <AlertDescription className="text-blue-900">
-                          <strong>Don't have a Discogs account?</strong> Create one first at{' '}
-                          <a 
-                            href="https://www.discogs.com/users/create" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="underline font-medium"
-                          >
-                            discogs.com/users/create
-                          </a>
-                        </AlertDescription>
-                      </Alert>
 
-                      <div className="space-y-3">
-                        <h4 className="font-semibold text-base">Step-by-Step Guide:</h4>
-                        
-                        {/* Step 1 */}
-                        <div className="flex gap-3 p-3 bg-muted rounded-lg">
-                          <div className="flex-shrink-0 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                            1
-                          </div>
-                          <div className="space-y-2 flex-1">
-                            <p className="font-medium">Go to Discogs Developer Settings</p>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="gap-2"
-                              onClick={() => window.open('https://www.discogs.com/settings/developers', '_blank')}
-                            >
-                              Open Discogs Developer Settings
-                              <ExternalLink className="w-3 h-3" />
-                            </Button>
-                            <p className="text-xs text-muted-foreground">
-                              This will open in a new tab. You may need to log in to Discogs first.
-                            </p>
-                          </div>
-                        </div>
+                    <Button 
+                      size="lg" 
+                      onClick={handleConnectDiscogs}
+                      className="gap-2"
+                    >
+                      <LinkIcon className="w-4 h-4" />
+                      Connect with Discogs
+                    </Button>
 
-                        {/* Step 2 */}
-                        <div className="flex gap-3 p-3 bg-muted rounded-lg">
-                          <div className="flex-shrink-0 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                            2
-                          </div>
-                          <div className="space-y-2 flex-1">
-                            <p className="font-medium">Find "Personal Access Tokens" section</p>
-                            <p className="text-muted-foreground">
-                              Scroll down the page until you see the "Personal Access Tokens" heading.
-                            </p>
-                          </div>
-                        </div>
+                    <div className="text-sm text-muted-foreground text-center max-w-md">
+                      <p>
+                        Don't have a Discogs account?{' '}
+                        <a 
+                          href="https://www.discogs.com/users/create" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-purple-600 hover:underline font-medium"
+                        >
+                          Create one free
+                          <ExternalLink className="w-3 h-3 inline ml-1" />
+                        </a>
+                      </p>
+                    </div>
+                  </div>
 
-                        {/* Step 3 */}
-                        <div className="flex gap-3 p-3 bg-muted rounded-lg">
-                          <div className="flex-shrink-0 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                            3
-                          </div>
-                          <div className="space-y-2 flex-1">
-                            <p className="font-medium">Generate a new token</p>
-                            <p className="text-muted-foreground">
-                              Click the <strong>"Generate new token"</strong> button.
-                            </p>
-                            <p className="text-muted-foreground">
-                              Give it a name like: <code className="bg-background px-2 py-1 rounded">Synapse App</code>
-                            </p>
-                          </div>
-                        </div>
+                  <Separator />
 
-                        {/* Step 4 */}
-                        <div className="flex gap-3 p-3 bg-muted rounded-lg">
-                          <div className="flex-shrink-0 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                            4
-                          </div>
-                          <div className="space-y-2 flex-1">
-                            <p className="font-medium">Copy your token</p>
-                            <p className="text-muted-foreground">
-                              A long string of characters will appear. Click to copy it - you'll only see this once!
-                            </p>
-                            <div className="bg-yellow-50 border border-yellow-200 p-2 rounded text-xs">
-                              ⚠️ <strong>Important:</strong> Copy it immediately! You can't view it again later.
-                            </div>
-                          </div>
-                        </div>
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-sm">What you'll be able to do:</h4>
+                    <ul className="text-sm text-muted-foreground space-y-2">
+                      <li className="flex items-start gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                        <span>Import your entire Discogs collection with one click</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                        <span>Sync your wantlist and track new additions</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                        <span>Get AI-powered insights about your music taste</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                        <span>Search and browse your collection offline</span>
+                      </li>
+                    </ul>
+                  </div>
+                </>
+              ) : (
+                // Connected State
+                <>
+                  <Alert className="bg-green-50 border-green-200">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <AlertTitle className="text-green-900">Successfully Connected!</AlertTitle>
+                    <AlertDescription className="text-green-800">
+                      Your Discogs account is linked and ready to use.
+                    </AlertDescription>
+                  </Alert>
 
-                        {/* Step 5 */}
-                        <div className="flex gap-3 p-3 bg-muted rounded-lg">
-                          <div className="flex-shrink-0 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                            5
-                          </div>
-                          <div className="space-y-2 flex-1">
-                            <p className="font-medium">Get your Discogs username</p>
-                            <p className="text-muted-foreground">
-                              Your username is in your profile URL: <code className="bg-background px-2 py-1 rounded">discogs.com/user/YOUR_USERNAME</code>
-                            </p>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="gap-2"
-                              onClick={() => window.open('https://www.discogs.com/settings/profile', '_blank')}
-                            >
-                              View My Profile
-                              <ExternalLink className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        </div>
-
-                        {/* Step 6 */}
-                        <div className="flex gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                          <div className="flex-shrink-0 w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                            6
-                          </div>
-                          <div className="flex-1">
-                            <p className="font-medium text-green-900">Paste both below and connect!</p>
-                            <p className="text-green-700 text-xs mt-1">
-                              Fill in the form below with your username and token, then click "Connect Discogs"
-                            </p>
-                          </div>
-                        </div>
+                  <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/50">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full bg-purple-600 flex items-center justify-center">
+                        <Music2 className="w-6 h-6 text-white" />
                       </div>
-
-                      <Separator />
-
-                      <div className="text-xs text-muted-foreground space-y-1">
-                        <p><strong>Need help?</strong> Watch this video tutorial: 
-                          <a 
-                            href="https://support.discogs.com/hc/en-us/articles/360009114953-How-To-Generate-A-Personal-Access-Token" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-purple-600 hover:underline ml-1"
-                          >
-                            Discogs Official Guide
-                            <ExternalLink className="w-3 h-3 inline ml-1" />
-                          </a>
+                      <div>
+                        <p className="font-medium">Connected Account</p>
+                        <p className="text-sm text-muted-foreground">
+                          {discogsUsername}
                         </p>
                       </div>
                     </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDisconnectDiscogs}
+                      disabled={disconnecting}
+                      className="gap-2"
+                    >
+                      <XCircle className="w-4 h-4" />
+                      {disconnecting ? 'Disconnecting...' : 'Disconnect'}
+                    </Button>
+                  </div>
 
-              <form onSubmit={handleSaveDiscogs} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="discogsUsername">Discogs Username</Label>
-                  <Input
-                    id="discogsUsername"
-                    value={discogsUsername}
-                    onChange={(e) => setDiscogsUsername(e.target.value)}
-                    placeholder="your_discogs_username"
-                    required
-                  />
-                </div>
+                  <Separator />
 
-                <div className="space-y-2">
-                  <Label htmlFor="discogsToken">Personal Access Token</Label>
-                  <Textarea
-                    id="discogsToken"
-                    value={discogsToken}
-                    onChange={(e) => setDiscogsToken(e.target.value)}
-                    placeholder="Your Discogs personal access token"
-                    required
-                    className="font-mono text-sm"
-                    rows={3}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Your token is stored securely and never shared.
-                  </p>
-                </div>
-
-                <Separator />
-
-                <div className="flex items-center gap-4">
-                  <Button type="submit" disabled={loading}>
-                    {loading ? 'Saving...' : discogsConnected ? 'Update Connection' : 'Connect Discogs'}
-                  </Button>
-                  
-                  {discogsConnected && (
-                    <p className="text-sm text-green-600 flex items-center gap-1">
-                      <CheckCircle className="w-4 h-4" />
-                      Connected as {discogsUsername}
+                  <div className="bg-muted p-4 rounded-lg space-y-3">
+                    <h4 className="font-medium">What's Next?</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Now that your Discogs account is connected, you can:
                     </p>
-                  )}
-                </div>
-              </form>
-
-              {discogsConnected && (
-                <div className="bg-muted p-4 rounded-lg space-y-2">
-                  <h4 className="font-medium">What's Next?</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Now that your Discogs account is connected, you can:
-                  </p>
-                  <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 ml-2">
-                    <li>Import your Discogs collection</li>
-                    <li>Sync your want list</li>
-                    <li>Search your collection</li>
-                    <li>Get AI insights on your music taste</li>
-                  </ul>
-                </div>
+                    <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 ml-2">
+                      <li>Import your Discogs collection to Synapse</li>
+                      <li>Sync your wantlist automatically</li>
+                      <li>Search and browse your collection offline</li>
+                      <li>Get AI-powered recommendations based on your taste</li>
+                    </ul>
+                    <div className="pt-2">
+                      <Button 
+                        variant="default" 
+                        onClick={() => window.location.href = '/dashboard/collection'}
+                        className="gap-2"
+                      >
+                        Go to Collection
+                        <ExternalLink className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>

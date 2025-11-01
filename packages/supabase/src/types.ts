@@ -22,6 +22,7 @@ export interface Database {
           avatar_url: string | null
           discogs_username: string | null
           discogs_token: string | null
+          discogs_token_secret: string | null
           discogs_connected: boolean
           preferences: Json | null
           created_at: string
@@ -34,6 +35,7 @@ export interface Database {
           avatar_url?: string | null
           discogs_username?: string | null
           discogs_token?: string | null
+          discogs_token_secret?: string | null
           discogs_connected?: boolean
           preferences?: Json | null
           created_at?: string
@@ -46,6 +48,7 @@ export interface Database {
           avatar_url?: string | null
           discogs_username?: string | null
           discogs_token?: string | null
+          discogs_token_secret?: string | null
           discogs_connected?: boolean
           preferences?: Json | null
           created_at?: string
