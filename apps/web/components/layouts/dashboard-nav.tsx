@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Music, Search, BarChart, Sparkles, Home, Settings, List } from 'lucide-react';
+import { Music, Search, ListMusic, Radio, Home, Settings, List } from 'lucide-react';
 import { UserMenu } from './user-menu';
 
 interface DashboardNavProps {
@@ -36,14 +36,14 @@ export function DashboardNav({ user }: DashboardNavProps) {
       icon: Search,
     },
     {
-      title: 'Insights',
-      href: '/dashboard/insights',
-      icon: Sparkles,
+      title: 'Radiations',
+      href: '/dashboard/radiations',
+      icon: Radio,
     },
     {
-      title: 'Analytics',
-      href: '/dashboard/analytics',
-      icon: BarChart,
+      title: 'Sessions',
+      href: '/dashboard/sessions',
+      icon: ListMusic,
     },
     {
       title: 'Settings',
