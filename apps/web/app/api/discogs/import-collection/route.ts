@@ -105,53 +105,180 @@ export async function POST(request: NextRequest) {
 
     console.log(`Import collection - Found ${allReleases.length} releases`);
 
-    // Transform and import records
+    // Transform and import records with tracks
     let imported = 0;
     let skipped = 0;
     let errors = 0;
+    let tracksCreated = 0;
 
     for (const release of allReleases) {
       try {
         const basicInfo = release.basic_information;
         
         // Check if record already exists
-        const { data: existing } = await supabase
+        const { data: existingRecord } = await supabase
           .from('records')
           .select('id')
           .eq('user_id', user.id)
           .eq('discogs_release_id', basicInfo.id)
           .single();
 
-        if (existing) {
+        let recordId: string;
+
+        if (existingRecord) {
           skipped++;
-          continue;
+          recordId = existingRecord.id;
+          
+          // Check if tracks already exist for this record
+          const { data: existingTracks } = await supabase
+            .from('tracks')
+            .select('id')
+            .eq('release_id', recordId)
+            .limit(1);
+
+          if (existingTracks && existingTracks.length > 0) {
+            console.log(`Tracks already exist for release ${basicInfo.id}, skipping track import`);
+            continue;
+          }
+        } else {
+          // Create new record
+          const recordData = {
+            user_id: user.id,
+            discogs_release_id: basicInfo.id,
+            title: basicInfo.title,
+            artist: basicInfo.artists?.[0]?.name || 'Unknown Artist',
+            year: basicInfo.year || null,
+            format: basicInfo.formats?.[0]?.name || null,
+            label: basicInfo.labels?.[0]?.name || null,
+            catalog_number: basicInfo.labels?.[0]?.catno || null,
+            cover_image_url: basicInfo.cover_image || basicInfo.thumb || null,
+            genres: basicInfo.genres || [],
+            styles: basicInfo.styles || [],
+          };
+
+          const { data: newRecord, error: insertError } = await supabase
+            .from('records')
+            .insert(recordData)
+            .select()
+            .single();
+
+          if (insertError) {
+            console.error('Import error for release:', basicInfo.id, insertError);
+            errors++;
+            continue;
+          }
+          
+          recordId = newRecord.id;
+          imported++;
         }
 
-        // Prepare record data
-        const recordData = {
-          user_id: user.id,
-          discogs_release_id: basicInfo.id,
-          title: basicInfo.title,
-          artist: basicInfo.artists?.[0]?.name || 'Unknown Artist',
-          year: basicInfo.year || null,
-          format: basicInfo.formats?.[0]?.name || null,
-          label: basicInfo.labels?.[0]?.name || null,
-          catalog_number: basicInfo.labels?.[0]?.catno || null,
-          cover_image_url: basicInfo.cover_image || basicInfo.thumb || null,
-          genres: basicInfo.genres || [],
-          styles: basicInfo.styles || [],
-        };
+        // Fetch full release details to get tracklist
+        console.log(`Fetching tracklist for release ${basicInfo.id}...`);
+        const releaseDetails = await oauthClient.makeRequest(
+          `https://api.discogs.com/releases/${basicInfo.id}`,
+          profile.discogs_token,
+          profile.discogs_token_secret,
+          'GET'
+        );
 
-        // Insert record
-        const { error: insertError } = await supabase
-          .from('records')
-          .insert(recordData);
+        // Import tracks
+        if (releaseDetails.tracklist && releaseDetails.tracklist.length > 0) {
+          for (const discogsTrack of releaseDetails.tracklist) {
+            // Skip non-track items (headings, etc.)
+            if (discogsTrack.type_ && discogsTrack.type_ !== 'track') continue;
 
-        if (insertError) {
-          console.error('Import error for release:', basicInfo.id, insertError);
-          errors++;
-        } else {
-          imported++;
+            try {
+              // Find or create canonical song
+              const songTitle = discogsTrack.title;
+              const songArtist = discogsTrack.artists?.[0]?.name || basicInfo.artists?.[0]?.name || 'Unknown Artist';
+              
+              // Normalize for matching
+              const titleNorm = songTitle.toLowerCase().replace(/[^\w\s]/g, '').trim();
+              const artistNorm = songArtist.toLowerCase().replace(/[^\w\s]/g, '').trim();
+
+              // Try to find existing song
+              let { data: existingSong } = await supabase
+                .from('songs')
+                .select('id')
+                .eq('title_normalized', titleNorm)
+                .eq('artist_normalized', artistNorm)
+                .single();
+
+              let songId: string;
+
+              if (existingSong) {
+                songId = existingSong.id;
+              } else {
+                // Create new song
+                const { data: newSong, error: songError } = await supabase
+                  .from('songs')
+                  .insert({
+                    title: songTitle,
+                    artist: songArtist,
+                    original_year: basicInfo.year,
+                    genres: basicInfo.genres,
+                    styles: basicInfo.styles,
+                  })
+                  .select()
+                  .single();
+
+                if (songError) {
+                  console.error('Error creating song:', songError);
+                  continue;
+                }
+                
+                songId = newSong.id;
+              }
+
+              // Parse duration
+              let durationMs = null;
+              if (discogsTrack.duration) {
+                const parts = discogsTrack.duration.split(':');
+                if (parts.length === 2) {
+                  const minutes = parseInt(parts[0]);
+                  const seconds = parseInt(parts[1]);
+                  durationMs = (minutes * 60 + seconds) * 1000;
+                }
+              }
+
+              // Create track
+              const { data: newTrack, error: trackError } = await supabase
+                .from('tracks')
+                .insert({
+                  song_id: songId,
+                  release_id: recordId,
+                  position: discogsTrack.position,
+                  title: songTitle,
+                  duration_ms: durationMs,
+                  discogs_track_id: `${basicInfo.id}-${discogsTrack.position}`,
+                })
+                .select()
+                .single();
+
+              if (trackError) {
+                console.error('Error creating track:', trackError);
+                continue;
+              }
+
+              // Create user_track entry
+              const { error: userTrackError } = await supabase
+                .from('user_tracks')
+                .insert({
+                  user_id: user.id,
+                  track_id: newTrack.id,
+                  source: basicInfo.formats?.[0]?.name?.toLowerCase().includes('vinyl') ? 'vinyl' : 'digital',
+                });
+
+              if (userTrackError) {
+                console.error('Error creating user_track:', userTrackError);
+                continue;
+              }
+
+              tracksCreated++;
+            } catch (trackErr) {
+              console.error('Error processing track:', trackErr);
+            }
+          }
         }
       } catch (err) {
         console.error('Error processing release:', err);
@@ -159,7 +286,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log(`Import collection - Complete: ${imported} imported, ${skipped} skipped, ${errors} errors`);
+    console.log(`Import collection - Complete: ${imported} releases imported, ${skipped} skipped, ${tracksCreated} tracks created, ${errors} errors`);
 
     return NextResponse.json({
       success: true,
@@ -169,6 +296,7 @@ export async function POST(request: NextRequest) {
         imported,
         skipped,
         errors,
+        tracksCreated,
       },
     });
   } catch (error) {

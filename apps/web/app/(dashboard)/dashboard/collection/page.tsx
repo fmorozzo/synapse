@@ -117,7 +117,8 @@ export default function CollectionPage() {
           <CheckCircle className="h-4 w-4 text-green-600" />
           <AlertTitle className="text-green-800">Import Completed!</AlertTitle>
           <AlertDescription className="text-green-700">
-            Successfully imported {importStats.imported} records. 
+            Successfully imported {importStats.imported} releases
+            {importStats.tracksCreated > 0 && ` with ${importStats.tracksCreated} tracks`}. 
             {importStats.skipped > 0 && ` ${importStats.skipped} already existed.`}
             {importStats.errors > 0 && ` ${importStats.errors} errors.`}
           </AlertDescription>
