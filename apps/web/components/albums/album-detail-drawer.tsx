@@ -18,7 +18,8 @@ import {
   ToggleLeft,
   ToggleRight,
   ArrowRight,
-  ArrowLeft
+  ArrowLeft,
+  Loader2
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -51,8 +52,13 @@ interface Recommendation {
   track_title: string;
   artist: string;
   album: string;
+  cover_image_url?: string;
+  label?: string;
+  year?: number;
   bpm: number | null;
   key: string | null;
+  genres?: string[];
+  styles?: string[];
   match_reason: string;
   match_score: number;
 }
@@ -71,6 +77,7 @@ export function AlbumDetailDrawer({ albumId, onClose }: AlbumDetailDrawerProps) 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(false);
   const [isRelationsEnabled, setIsRelationsEnabled] = useState(true);
   const [error, setError] = useState('');
 
@@ -82,6 +89,12 @@ export function AlbumDetailDrawer({ albumId, onClose }: AlbumDetailDrawerProps) 
 
   useEffect(() => {
     if (selectedTrack) {
+      // Clear previous data immediately
+      setRelatedTracks([]);
+      setRecommendations([]);
+      setLoadingRecommendations(true);
+      
+      // Load new data
       loadRelatedTracks(selectedTrack);
       loadRecommendations(selectedTrack);
     }
@@ -129,6 +142,7 @@ export function AlbumDetailDrawer({ albumId, onClose }: AlbumDetailDrawerProps) 
 
   async function loadRecommendations(trackId: string) {
     try {
+      setLoadingRecommendations(true);
       const response = await fetch(`/api/tracks/${trackId}/recommendations`);
       if (response.ok) {
         const data = await response.json();
@@ -136,16 +150,37 @@ export function AlbumDetailDrawer({ albumId, onClose }: AlbumDetailDrawerProps) 
       }
     } catch (err) {
       console.error('Failed to load recommendations:', err);
+    } finally {
+      setLoadingRecommendations(false);
     }
   }
 
   async function searchTracks() {
     try {
-      const response = await fetch(`/api/tracks/search?q=${encodeURIComponent(searchQuery)}`);
-      if (response.ok) {
-        const data = await response.json();
-        setSearchResults(data.tracks || []);
+      // Only search from THIS album's tracks
+      if (!tracks || tracks.length === 0) {
+        setSearchResults([]);
+        return;
       }
+
+      // Filter tracks from current album only
+      const query = searchQuery.toLowerCase();
+      const filtered = tracks.filter(track => 
+        track.id !== selectedTrack && // Exclude currently selected track
+        track.title.toLowerCase().includes(query)
+      );
+
+      // Map to search result format
+      const results = filtered.map(track => ({
+        track_id: track.id,
+        track_title: track.title,
+        song_artist: album?.artist || 'Unknown',
+        release_title: album?.title || 'Unknown',
+        bpm: track.bpm,
+        key: track.key,
+      }));
+
+      setSearchResults(results);
     } catch (err) {
       console.error('Failed to search tracks:', err);
     }
@@ -363,24 +398,17 @@ export function AlbumDetailDrawer({ albumId, onClose }: AlbumDetailDrawerProps) 
 
               {selectedTrack && tracks.length > 0 && (
                 <>
-                  <Separator />
-
-                  {/* Related Tracks */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-semibold flex items-center gap-2">
-                        <Link2 className="w-4 h-4" />
-                        Related Tracks ({relatedTracks.length})
-                      </h4>
-                    </div>
-
-                    {relatedTracks.length === 0 ? (
-                      <Alert>
-                        <AlertDescription>
-                          No related tracks yet. Add tracks that mix well with this one!
-                        </AlertDescription>
-                      </Alert>
-                    ) : (
+                  {/* Related Tracks - Only show if there are relations */}
+                  {relatedTracks.length > 0 && (
+                    <>
+                      <Separator />
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-semibold flex items-center gap-2">
+                            <Link2 className="w-4 h-4" />
+                            Related Tracks ({relatedTracks.length})
+                          </h4>
+                        </div>
                       <div className="space-y-2">
                         {relatedTracks.map((related) => (
                           <div
@@ -429,20 +457,21 @@ export function AlbumDetailDrawer({ albumId, onClose }: AlbumDetailDrawerProps) 
                           </div>
                         ))}
                       </div>
-                    )}
-                  </div>
+                    </div>
+                    </>
+                  )}
 
                   <Separator />
 
-                  {/* Add New Relation */}
+                  {/* Add New Relation - From this album only */}
                   <div className="space-y-4">
                     <h4 className="font-semibold flex items-center gap-2">
                       <Plus className="w-4 h-4" />
-                      Add Related Track
+                      Add Related Track (from this album)
                     </h4>
 
                     <div className="space-y-2">
-                      <Label>Search for a track</Label>
+                      <Label>Search tracks from "{album?.title}"</Label>
                       <Input
                         placeholder="Search by title, artist, or album..."
                         value={searchQuery}
@@ -497,47 +526,132 @@ export function AlbumDetailDrawer({ albumId, onClose }: AlbumDetailDrawerProps) 
                   <div className="space-y-4">
                     <h4 className="font-semibold flex items-center gap-2">
                       <Sparkles className="w-4 h-4" />
-                      Recommended Tracks ({recommendations.length})
+                      Recommended Tracks
                     </h4>
 
-                    {recommendations.length === 0 ? (
+                    {loadingRecommendations ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                        <span className="ml-2 text-sm text-muted-foreground">Loading...</span>
+                      </div>
+                    ) : recommendations.length === 0 ? (
                       <Alert>
                         <AlertDescription>
                           No recommendations yet. Add BPM, Key, and genres to get better recommendations!
                         </AlertDescription>
                       </Alert>
                     ) : (
-                      <div className="space-y-2">
-                        {recommendations.map((rec) => (
-                          <div
-                            key={rec.track_id}
-                            className="p-3 bg-blue-50 border border-blue-200 rounded-lg"
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <div className="font-medium">{rec.track_title}</div>
-                                <div className="text-sm text-muted-foreground">
-                                  {rec.artist} • {rec.album}
+                      <div className="space-y-3">
+                        {recommendations.map((rec) => {
+                          // Parse tags from match_reason and data
+                          const tags: string[] = [];
+                          const reasons = rec.match_reason.split(' • ');
+                          
+                          // Helper: Get decade from year
+                          const getDecade = (year: number): string => {
+                            if (year < 1990) return '80s';
+                            if (year < 2000) return '90s';
+                            if (year < 2010) return '00s';
+                            if (year < 2020) return '10s';
+                            return '20s';
+                          };
+
+                          // 1. Add label/artist tags from match_reason
+                          reasons.forEach(reason => {
+                            if (reason.includes('Same label')) {
+                              tags.push('Same Label');
+                            } else if (reason.includes('Same artist')) {
+                              tags.push('Same Artist');
+                            } else if (reason.includes('Artist also on')) {
+                              tags.push('Related Artist');
+                            }
+                          });
+
+                          // 2. Add genre/style tags (split into individual tags)
+                          const allStyles = [...(rec.styles || []), ...(rec.genres || [])];
+                          const uniqueStyles = Array.from(new Set(allStyles))
+                            .filter(s => !['Electronic', 'Dance'].includes(s)) // Skip generic
+                            .slice(0, 2); // Max 2 genre tags
+                          
+                          uniqueStyles.forEach(style => tags.push(style));
+
+                          // 3. Add decade if year < 1999
+                          if (rec.year && rec.year < 1999) {
+                            tags.push(getDecade(rec.year));
+                          }
+
+                          // 4. Add BPM if available
+                          if (rec.bpm) {
+                            tags.push(`${rec.bpm} BPM`);
+                          }
+
+                          // 5. Add Key if available
+                          if (rec.key) {
+                            tags.push(rec.key);
+                          }
+
+                          return (
+                            <div
+                              key={rec.track_id}
+                              className="p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+                            >
+                              <div className="flex gap-3">
+                                {/* Album Cover */}
+                                <div className="w-16 h-16 bg-muted rounded flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                  {rec.cover_image_url ? (
+                                    <img
+                                      src={rec.cover_image_url}
+                                      alt={rec.album}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <Music2 className="w-8 h-8 text-muted-foreground" />
+                                  )}
                                 </div>
-                                <div className="text-xs text-blue-700 mt-1">
-                                  {rec.bpm && <span>{rec.bpm} BPM</span>}
-                                  {rec.key && <span className="ml-2">• {rec.key}</span>}
-                                  <span className="ml-2">• {rec.match_reason}</span>
+
+                                {/* Track Info */}
+                                <div className="flex-1 min-w-0">
+                                  {/* Album Name (prominent) */}
+                                  <div className="font-semibold truncate">{rec.album}</div>
+                                  
+                                  {/* Artist and Song */}
+                                  <div className="text-sm text-muted-foreground truncate">
+                                    {rec.artist} - {rec.track_title}
+                                  </div>
+                                  
+                                  {/* Tags */}
+                                  {tags.length > 0 && (
+                                    <div className="flex flex-wrap gap-1 mt-1.5">
+                                      {tags.slice(0, 5).map((tag, idx) => (
+                                        <span
+                                          key={idx}
+                                          className="text-xs px-2 py-0.5 bg-blue-200 text-blue-800 rounded-full"
+                                        >
+                                          {tag}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  {/* Score */}
+                                  <div className="text-xs text-blue-700 mt-1">
+                                    Score: {rec.match_score}
+                                  </div>
                                 </div>
-                              </div>
-                              <div className="flex gap-1">
+
+                                {/* Add Button */}
                                 <Button
                                   size="sm"
                                   onClick={() => addRelation(rec.track_id, true)}
-                                  className="gap-1"
+                                  className="gap-1 flex-shrink-0"
                                 >
                                   <Plus className="w-3 h-3" />
                                   Add
                                 </Button>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </div>
