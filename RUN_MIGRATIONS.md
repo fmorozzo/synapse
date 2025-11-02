@@ -75,14 +75,37 @@ You should see:
 - ✅ `discogs_token_secret`
 - ✅ `discogs_connected`
 
+## Migration 4: Add Track-Level Granularity (IMPORTANT - For DJ Features!)
+
+**File:** `packages/supabase/src/migrations/004_add_tracks_and_songs.sql`
+
+This migration adds support for individual tracks and the recommendation engine. Copy the entire file contents and run in Supabase SQL Editor.
+
+**What it adds:**
+- `songs` table - Canonical songs (handles duplicates across versions)
+- `tracks` table - Specific track versions on releases (BPM, Key, etc.)
+- `user_tracks` table - Links users to tracks in their collection
+- `track_transitions` table - Records transitions for recommendations
+- Indexes and RLS policies for all new tables
+- Helpful views and triggers
+
+**See:** `TRACKS_IMPLEMENTATION_GUIDE.md` for details on how to use these tables.
+
 ## After Running Migrations
 
-Once you've run migrations 2 and 3:
+Once you've run all migrations (1, 2, 3, and 4):
 
-1. Restart your dev server (Ctrl+C, then `pnpm dev:web`)
-2. Go back to Settings
-3. Try connecting Discogs again
-4. It should work now! ✨
+1. Verify tables exist:
+```sql
+SELECT table_name FROM information_schema.tables 
+WHERE table_schema = 'public' 
+ORDER BY table_name;
+```
+
+You should see: `profiles`, `records`, `songs`, `tracks`, `user_tracks`, `track_transitions`
+
+2. Restart your dev server (Ctrl+C, then `pnpm dev:web`)
+3. Your app now has the complete database structure! ✨
 
 ---
 

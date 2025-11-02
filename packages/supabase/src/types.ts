@@ -123,6 +123,247 @@ export interface Database {
           updated_at?: string
         }
       }
+      songs: {
+        Row: {
+          id: string
+          title: string
+          artist: string
+          original_year: number | null
+          genres: string[] | null
+          styles: string[] | null
+          musicbrainz_work_id: string | null
+          spotify_track_id: string | null
+          isrc: string | null
+          title_normalized: string | null
+          artist_normalized: string | null
+          play_count: number
+          transition_count: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          artist: string
+          original_year?: number | null
+          genres?: string[] | null
+          styles?: string[] | null
+          musicbrainz_work_id?: string | null
+          spotify_track_id?: string | null
+          isrc?: string | null
+          play_count?: number
+          transition_count?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          artist?: string
+          original_year?: number | null
+          genres?: string[] | null
+          styles?: string[] | null
+          musicbrainz_work_id?: string | null
+          spotify_track_id?: string | null
+          isrc?: string | null
+          play_count?: number
+          transition_count?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      tracks: {
+        Row: {
+          id: string
+          song_id: string | null
+          release_id: string | null
+          position: string | null
+          title: string
+          duration_ms: number | null
+          bpm: number | null
+          key: string | null
+          camelot_key: string | null
+          energy_level: number | null
+          version_type: string | null
+          version_info: string | null
+          remix_artist: string | null
+          intro_length_ms: number | null
+          outro_length_ms: number | null
+          is_instrumental: boolean
+          has_vocal: boolean
+          discogs_track_id: string | null
+          spotify_track_id: string | null
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          song_id?: string | null
+          release_id?: string | null
+          position?: string | null
+          title: string
+          duration_ms?: number | null
+          bpm?: number | null
+          key?: string | null
+          camelot_key?: string | null
+          energy_level?: number | null
+          version_type?: string | null
+          version_info?: string | null
+          remix_artist?: string | null
+          intro_length_ms?: number | null
+          outro_length_ms?: number | null
+          is_instrumental?: boolean
+          has_vocal?: boolean
+          discogs_track_id?: string | null
+          spotify_track_id?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          song_id?: string | null
+          release_id?: string | null
+          position?: string | null
+          title?: string
+          duration_ms?: number | null
+          bpm?: number | null
+          key?: string | null
+          camelot_key?: string | null
+          energy_level?: number | null
+          version_type?: string | null
+          version_info?: string | null
+          remix_artist?: string | null
+          intro_length_ms?: number | null
+          outro_length_ms?: number | null
+          is_instrumental?: boolean
+          has_vocal?: boolean
+          discogs_track_id?: string | null
+          spotify_track_id?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      user_tracks: {
+        Row: {
+          id: string
+          user_id: string
+          track_id: string
+          personal_rating: number | null
+          tags: string[] | null
+          notes: string | null
+          source: string | null
+          location: string | null
+          play_count: number
+          last_played_at: string | null
+          crate_name: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          track_id: string
+          personal_rating?: number | null
+          tags?: string[] | null
+          notes?: string | null
+          source?: string | null
+          location?: string | null
+          play_count?: number
+          last_played_at?: string | null
+          crate_name?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          track_id?: string
+          personal_rating?: number | null
+          tags?: string[] | null
+          notes?: string | null
+          source?: string | null
+          location?: string | null
+          play_count?: number
+          last_played_at?: string | null
+          crate_name?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      track_transitions: {
+        Row: {
+          id: string
+          user_id: string
+          from_track_id: string
+          to_track_id: string
+          rating: number | null
+          worked_well: boolean | null
+          context: string | null
+          vibe_tags: string[] | null
+          bpm_diff: number | null
+          key_compatible: boolean | null
+          played_at: string
+          venue: string | null
+          event_name: string | null
+          set_id: string | null
+          transition_type: string | null
+          transition_length_sec: number | null
+          is_public: boolean
+          likes_count: number
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          from_track_id: string
+          to_track_id: string
+          rating?: number | null
+          worked_well?: boolean | null
+          context?: string | null
+          vibe_tags?: string[] | null
+          bpm_diff?: number | null
+          key_compatible?: boolean | null
+          played_at?: string
+          venue?: string | null
+          event_name?: string | null
+          set_id?: string | null
+          transition_type?: string | null
+          transition_length_sec?: number | null
+          is_public?: boolean
+          likes_count?: number
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          from_track_id?: string
+          to_track_id?: string
+          rating?: number | null
+          worked_well?: boolean | null
+          context?: string | null
+          vibe_tags?: string[] | null
+          bpm_diff?: number | null
+          key_compatible?: boolean | null
+          played_at?: string
+          venue?: string | null
+          event_name?: string | null
+          set_id?: string | null
+          transition_type?: string | null
+          transition_length_sec?: number | null
+          is_public?: boolean
+          likes_count?: number
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
