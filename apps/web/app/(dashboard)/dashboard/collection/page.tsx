@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Plus, Download, Music2, CheckCircle, Loader2 } from 'lucide-react';
 import Image from 'next/image';
+import { AlbumDetailDrawer } from '@/components/albums/album-detail-drawer';
 
 interface Record {
   id: string;
@@ -25,6 +26,7 @@ export default function CollectionPage() {
   const [importSuccess, setImportSuccess] = useState(false);
   const [importStats, setImportStats] = useState<any>(null);
   const [error, setError] = useState('');
+  const [selectedAlbumId, setSelectedAlbumId] = useState<string | null>(null);
 
   useEffect(() => {
     loadCollection();
@@ -178,7 +180,11 @@ export default function CollectionPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {records.map((record) => (
-            <Card key={record.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+            <Card 
+              key={record.id} 
+              className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => setSelectedAlbumId(record.id)}
+            >
               <div className="aspect-square relative bg-muted">
                 {record.cover_image_url ? (
                   <Image
@@ -220,6 +226,12 @@ export default function CollectionPage() {
           ))}
         </div>
       )}
+
+      {/* Album Detail Drawer */}
+      <AlbumDetailDrawer
+        albumId={selectedAlbumId}
+        onClose={() => setSelectedAlbumId(null)}
+      />
     </div>
   );
 }

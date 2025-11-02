@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { getRecordById, updateRecord, deleteRecord } from '@synapse/supabase';
-import { UpdateRecordInputSchema } from '@synapse/shared';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params;
     const supabase = await createServerSupabaseClient();
     
+    // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
@@ -20,8 +18,40 @@ export async function GET(
       );
     }
 
-    const record = await getRecordById(supabase, id, user.id);
-    return NextResponse.json(record);
+    // Get record details
+    const { data: record, error: recordError } = await supabase
+      .from('records')
+      .select('*')
+      .eq('id', params.id)
+      .eq('user_id', user.id)
+      .single();
+
+    if (recordError || !record) {
+      return NextResponse.json(
+        { error: 'Record not found' },
+        { status: 404 }
+      );
+    }
+
+    // Try to get tracks for this record
+    let tracks = [];
+    try {
+      const { data: tracksData } = await supabase
+        .from('tracks')
+        .select('*')
+        .eq('release_id', params.id)
+        .order('position', { ascending: true });
+
+      tracks = tracksData || [];
+    } catch (err) {
+      // Tracks table might not exist yet
+      console.log('Tracks table not found, skipping');
+    }
+
+    return NextResponse.json({
+      record,
+      tracks,
+    });
   } catch (error) {
     console.error('Get record error:', error);
     return NextResponse.json(
@@ -30,63 +60,3 @@ export async function GET(
     );
   }
 }
-
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
-    const supabase = await createServerSupabaseClient();
-    
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const body = await request.json();
-    const validatedInput = UpdateRecordInputSchema.parse(body);
-
-    const record = await updateRecord(supabase, id, user.id, validatedInput);
-    return NextResponse.json(record);
-  } catch (error) {
-    console.error('Update record error:', error);
-    return NextResponse.json(
-      { error: 'Failed to update record' },
-      { status: 500 }
-    );
-  }
-}
-
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
-    const supabase = await createServerSupabaseClient();
-    
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    await deleteRecord(supabase, id, user.id);
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Delete record error:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete record' },
-      { status: 500 }
-    );
-  }
-}
-
