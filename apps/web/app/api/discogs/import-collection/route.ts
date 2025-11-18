@@ -142,18 +142,32 @@ export async function POST(request: NextRequest) {
           }
         } else {
           // Create new record
+          const format = basicInfo.formats?.[0]?.name || null;
+          
+          // Determine collection_type from format
+          const isDigital = format && (
+            format.toLowerCase().includes('file') ||
+            format.toLowerCase().includes('mp3') ||
+            format.toLowerCase().includes('flac') ||
+            format.toLowerCase().includes('wav') ||
+            format.toLowerCase().includes('aiff') ||
+            format.toLowerCase().includes('download')
+          );
+          
           const recordData = {
             user_id: user.id,
             discogs_release_id: basicInfo.id,
             title: basicInfo.title,
             artist: basicInfo.artists?.[0]?.name || 'Unknown Artist',
             year: basicInfo.year || null,
-            format: basicInfo.formats?.[0]?.name || null,
+            format: format,
             label: basicInfo.labels?.[0]?.name || null,
             catalog_number: basicInfo.labels?.[0]?.catno || null,
             cover_image_url: basicInfo.cover_image || basicInfo.thumb || null,
             genres: basicInfo.genres || [],
             styles: basicInfo.styles || [],
+            collection_type: isDigital ? 'digital' : 'physical',
+            import_source: 'discogs',
           };
 
           const { data: newRecord, error: insertError } = await supabase

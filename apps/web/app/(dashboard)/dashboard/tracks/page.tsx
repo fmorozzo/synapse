@@ -1,380 +1,536 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { useState, useEffect, useMemo } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Search, Download, Music2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Loader2, Music2, Search, Disc3, HardDrive } from 'lucide-react';
+import { getCompatibleKeys } from '@synapse/shared';
+import { TrackDetailDrawer } from '@/components/tracks/track-detail-drawer';
 import Image from 'next/image';
 
 interface Track {
-  user_track_id: string;
-  track_id: string;
-  track_title: string;
-  position: string | null;
+  id: string;
+  title: string;
   bpm: number | null;
   key: string | null;
   camelot_key: string | null;
-  energy_level: number | null;
   duration_ms: number | null;
-  version_type: string | null;
-  version_info: string | null;
-  song_id: string;
-  song_title: string;
-  song_artist: string;
-  genres: string[] | null;
-  styles: string[] | null;
-  release_id: string;
-  release_title: string;
-  cover_image_url: string | null;
-  format: string | null;
-  year: number | null;
+  energy_level: number | null;
+  songs: {
+    artist: string;
+    genres: string[];
+  };
+  records: {
+    title: string;
+    year: number | null;
+    format: string | null;
+    cover_image_url: string | null;
+    collection_type: 'physical' | 'digital';
+    label: string | null;
+  };
   personal_rating: number | null;
-  tags: string[] | null;
-  source: string | null;
-  location: string | null;
-  crate_name: string | null;
   play_count: number;
-  last_played_at: string | null;
 }
+
+type FormatFilter = 'all' | 'vinyl' | 'digital';
+type SortBy = 'bpm' | 'key' | 'artist' | 'title' | 'dateAdded';
 
 export default function TracksPage() {
   const [tracks, setTracks] = useState<Track[]>([]);
-  const [filteredTracks, setFilteredTracks] = useState<Track[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [filteredCount, setFilteredCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState('');
+  const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  
+  // Filters
+  const [search, setSearch] = useState('');
+  const [formatFilter, setFormatFilter] = useState<FormatFilter>('all');
+  const [bpmValue, setBpmValue] = useState<number | null>(null);
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const [selectedDecades, setSelectedDecades] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<SortBy>('artist'); // Default to alphabetical
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   useEffect(() => {
-    loadTracks();
-  }, []);
+    setPage(1);
+    loadTracks(1, true); // Reset to page 1 when filters change
+  }, [formatFilter, bpmValue, selectedKey, selectedGenres, selectedDecades, sortBy, sortOrder, search]);
 
-  useEffect(() => {
-    filterTracks();
-  }, [searchQuery, tracks]);
-
-  async function loadTracks() {
+  async function loadTracks(pageNum: number = 1, replace: boolean = false) {
     try {
-      setLoading(true);
-      const response = await fetch('/api/tracks/all');
+      if (replace) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+      
+      // Build query params
+      const params = new URLSearchParams();
+      params.append('page', pageNum.toString());
+      params.append('limit', '50');
+      params.append('sortBy', sortBy);
+      params.append('sortOrder', sortOrder);
+      
+      if (formatFilter !== 'all') {
+        params.append('format', formatFilter);
+      }
+      if (search) {
+        params.append('search', search);
+      }
+      if (bpmValue) {
+        params.append('targetBpm', bpmValue.toString());
+      }
+      if (selectedKey && compatibleKeys.length > 0) {
+        params.append('keys', compatibleKeys.join(','));
+      }
+      if (selectedGenres.length > 0) {
+        params.append('genres', selectedGenres.join(','));
+      }
+      if (selectedDecades.length > 0) {
+        params.append('decade', selectedDecades.join(','));
+      }
+      
+      const response = await fetch(`/api/tracks/all?${params.toString()}`);
       if (response.ok) {
         const data = await response.json();
-        setTracks(data.tracks || []);
-        setFilteredTracks(data.tracks || []);
+        console.log('Loaded tracks:', data.tracks?.length, 'tracks (page', pageNum, ')');
+        
+        if (replace) {
+          setTracks(data.tracks || []);
+        } else {
+          setTracks(prev => [...prev, ...(data.tracks || [])]);
+        }
+        
+        setTotalCount(data.totalCount || 0);
+        setFilteredCount(data.count || 0);
+        setHasMore(data.hasMore || false);
+        setPage(pageNum);
       } else {
-        throw new Error('Failed to load tracks');
+        setError('Failed to load tracks');
       }
     } catch (err) {
       console.error('Failed to load tracks:', err);
       setError('Failed to load tracks');
     } finally {
       setLoading(false);
+      setLoadingMore(false);
+    }
+  }
+  
+  function loadMore() {
+    if (!loadingMore && hasMore) {
+      loadTracks(page + 1, false);
     }
   }
 
-  function filterTracks() {
-    if (!searchQuery.trim()) {
-      setFilteredTracks(tracks);
-      return;
-    }
+  // Calculate compatible keys when a key is selected
+  const compatibleKeys = useMemo(() => {
+    if (!selectedKey) return [];
+    return getCompatibleKeys(selectedKey).map(k => k.key);
+  }, [selectedKey]);
 
-    const query = searchQuery.toLowerCase();
-    const filtered = tracks.filter(track => 
-      track.track_title.toLowerCase().includes(query) ||
-      track.song_artist.toLowerCase().includes(query) ||
-      track.release_title.toLowerCase().includes(query) ||
-      track.genres?.some(g => g.toLowerCase().includes(query)) ||
-      track.key?.toLowerCase().includes(query)
+  // Get unique genres from tracks
+  const availableGenres = useMemo(() => {
+    const genres = new Set<string>();
+    tracks.forEach(t => {
+      t.songs?.genres?.forEach(g => genres.add(g));
+    });
+    return Array.from(genres).sort();
+  }, [tracks]);
+
+  const toggleDecade = (decade: string) => {
+    setSelectedDecades(prev =>
+      prev.includes(decade)
+        ? prev.filter(d => d !== decade)
+        : [...prev, decade]
     );
-    setFilteredTracks(filtered);
-  }
+  };
 
-  function formatDuration(ms: number | null): string {
-    if (!ms) return '-';
-    const minutes = Math.floor(ms / 60000);
-    const seconds = Math.floor((ms % 60000) / 1000);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  }
+  const toggleGenre = (genre: string) => {
+    setSelectedGenres(prev =>
+      prev.includes(genre)
+        ? prev.filter(g => g !== genre)
+        : [...prev, genre]
+    );
+  };
 
-  function exportToCSV() {
-    const headers = [
-      'Track Title',
-      'Artist',
-      'Album',
-      'Position',
-      'BPM',
-      'Key',
-      'Camelot',
-      'Energy',
-      'Duration',
-      'Year',
-      'Format',
-      'Genres',
-      'Styles',
-      'Version',
-      'Source',
-      'Location',
-      'Crate',
-      'Rating',
-      'Play Count',
-    ];
+  const clearFilters = () => {
+    setSearch('');
+    setFormatFilter('all');
+    setBpmValue(null);
+    setSelectedKey(null);
+    setSelectedGenres([]);
+    setSelectedDecades([]);
+  };
 
-    const rows = filteredTracks.map(track => [
-      track.track_title,
-      track.song_artist,
-      track.release_title,
-      track.position || '',
-      track.bpm || '',
-      track.key || '',
-      track.camelot_key || '',
-      track.energy_level || '',
-      formatDuration(track.duration_ms),
-      track.year || '',
-      track.format || '',
-      track.genres?.join('; ') || '',
-      track.styles?.join('; ') || '',
-      track.version_info || track.version_type || '',
-      track.source || '',
-      track.location || '',
-      track.crate_name || '',
-      track.personal_rating || '',
-      track.play_count,
-    ]);
-
-    const csv = [
-      headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-    ].join('\n');
-
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `synapse-tracks-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-  }
+  const hasActiveFilters = search || formatFilter !== 'all' || bpmValue || selectedKey ||
+    selectedGenres.length > 0 || selectedDecades.length > 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold mb-2">All Tracks</h1>
-          <p className="text-muted-foreground">
-            {filteredTracks.length} track{filteredTracks.length !== 1 ? 's' : ''} 
-            {searchQuery && ` matching "${searchQuery}"`}
+          <h1 className="text-3xl font-bold">Tracks</h1>
+          <p className="text-muted-foreground mt-1">
+            {loading ? 'Loading...' : filteredCount > 0 
+              ? `Showing ${tracks.length} of ${filteredCount} tracks${hasActiveFilters ? ' (filtered)' : ''}`
+              : `${totalCount} tracks total`
+            }
           </p>
-        </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            className="gap-2"
-            onClick={exportToCSV}
-            disabled={filteredTracks.length === 0}
-          >
-            <Download className="w-4 h-4" />
-            Export CSV
-          </Button>
         </div>
       </div>
 
-      {/* Search */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+          {error}
+        </div>
+      )}
+
+      {/* Filters */}
       <Card>
-        <CardContent className="pt-6">
+        <CardContent className="p-6 space-y-4">
+          {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Search by title, artist, album, genre, or key..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search artist, track, album, label..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               className="pl-10"
             />
           </div>
+
+          {/* Format & BPM */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Format Filter */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">Format</label>
+              <div className="flex gap-2">
+                <Button
+                  variant={formatFilter === 'all' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFormatFilter('all')}
+                >
+                  All
+                </Button>
+                <Button
+                  variant={formatFilter === 'vinyl' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFormatFilter('vinyl')}
+                  className="gap-2"
+                >
+                  <Disc3 className="w-4 h-4" />
+                  Vinyl
+                </Button>
+                <Button
+                  variant={formatFilter === 'digital' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFormatFilter('digital')}
+                  className="gap-2"
+                >
+                  <HardDrive className="w-4 h-4" />
+                  Digital
+                </Button>
+              </div>
+            </div>
+
+            {/* BPM Filter */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                BPM (±6% pitch range)
+              </label>
+              <div className="flex gap-2">
+                <Input
+                  type="number"
+                  placeholder="Target BPM..."
+                  value={bpmValue || ''}
+                  onChange={(e) => setBpmValue(e.target.value ? parseFloat(e.target.value) : null)}
+                  className="w-32"
+                />
+                {bpmValue && (
+                  <span className="text-sm text-muted-foreground self-center">
+                    {(bpmValue * 0.94).toFixed(1)} - {(bpmValue * 1.06).toFixed(1)}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Key Filter */}
+          <div>
+            <label className="text-sm font-medium mb-2 block">
+              Key (Camelot Wheel)
+            </label>
+            <div className="space-y-2">
+              <div className="flex gap-2 flex-wrap">
+                {['1A', '2A', '3A', '4A', '5A', '6A', '7A', '8A', '9A', '10A', '11A', '12A'].map(key => (
+                  <Button
+                    key={key}
+                    variant={selectedKey === key ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSelectedKey(selectedKey === key ? null : key)}
+                    className="w-12"
+                  >
+                    {key}
+                  </Button>
+                ))}
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                {['1B', '2B', '3B', '4B', '5B', '6B', '7B', '8B', '9B', '10B', '11B', '12B'].map(key => (
+                  <Button
+                    key={key}
+                    variant={selectedKey === key ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSelectedKey(selectedKey === key ? null : key)}
+                    className="w-12"
+                  >
+                    {key}
+                  </Button>
+                ))}
+              </div>
+              {selectedKey && (
+                <div className="text-sm text-muted-foreground">
+                  Compatible: {compatibleKeys.join(', ')}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Decades */}
+          <div>
+            <label className="text-sm font-medium mb-2 block">Era</label>
+            <div className="flex gap-2 flex-wrap">
+              {['70s', '80s', '90s', '2000s', '2010s', '2020s'].map(decade => (
+                <Button
+                  key={decade}
+                  variant={selectedDecades.includes(decade) ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => toggleDecade(decade)}
+                >
+                  {decade}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Genres */}
+          {availableGenres.length > 0 && (
+            <div>
+              <label className="text-sm font-medium mb-2 block">Genre</label>
+              <div className="flex gap-2 flex-wrap max-h-32 overflow-y-auto">
+                {availableGenres.slice(0, 20).map(genre => (
+                  <Button
+                    key={genre}
+                    variant={selectedGenres.includes(genre) ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => toggleGenre(genre)}
+                  >
+                    {genre}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Clear Filters */}
+          {hasActiveFilters && (
+            <Button variant="outline" size="sm" onClick={clearFilters}>
+              Clear All Filters
+            </Button>
+          )}
         </CardContent>
       </Card>
 
-      {error && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
+      {/* Sort Controls */}
+      <div className="flex gap-2 items-center">
+        <span className="text-sm font-medium">Sort by:</span>
+        <Button
+          variant={sortBy === 'bpm' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setSortBy('bpm')}
+        >
+          BPM
+        </Button>
+        <Button
+          variant={sortBy === 'key' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setSortBy('key')}
+        >
+          Key
+        </Button>
+        <Button
+          variant={sortBy === 'artist' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setSortBy('artist')}
+        >
+          Artist
+        </Button>
+        <Button
+          variant={sortBy === 'dateAdded' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setSortBy('dateAdded')}
+        >
+          Recently Added
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+        >
+          {sortOrder === 'asc' ? '↑' : '↓'}
+        </Button>
+      </div>
 
+      {/* Track List */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
         </div>
-      ) : filteredTracks.length === 0 ? (
+      ) : tracks.length === 0 ? (
         <Card>
-          <CardContent className="pt-12 pb-12 text-center">
-            <Music2 className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground mb-2">
-              {searchQuery ? 'No tracks found matching your search' : 'No tracks in your collection yet'}
-            </p>
-            {!searchQuery && (
-              <Button variant="outline" onClick={() => window.location.href = '/dashboard/collection'}>
-                Import from Discogs
-              </Button>
-            )}
+          <CardContent className="py-12 text-center text-muted-foreground">
+            {hasActiveFilters ? 'No tracks match your filters' : 'No tracks found'}
           </CardContent>
         </Card>
       ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>Track Database</CardTitle>
-            <CardDescription>
-              All tracks with complete metadata
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-2 font-medium">Cover</th>
-                    <th className="text-left p-2 font-medium">Track</th>
-                    <th className="text-left p-2 font-medium">Artist</th>
-                    <th className="text-left p-2 font-medium">Album</th>
-                    <th className="text-left p-2 font-medium">Pos</th>
-                    <th className="text-left p-2 font-medium">BPM</th>
-                    <th className="text-left p-2 font-medium">Key</th>
-                    <th className="text-left p-2 font-medium">Camelot</th>
-                    <th className="text-left p-2 font-medium">Energy</th>
-                    <th className="text-left p-2 font-medium">Duration</th>
-                    <th className="text-left p-2 font-medium">Year</th>
-                    <th className="text-left p-2 font-medium">Format</th>
-                    <th className="text-left p-2 font-medium">Genres</th>
-                    <th className="text-left p-2 font-medium">Version</th>
-                    <th className="text-left p-2 font-medium">Source</th>
-                    <th className="text-left p-2 font-medium">Plays</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredTracks.map((track) => (
-                    <tr key={track.user_track_id} className="border-b hover:bg-muted/50">
-                      <td className="p-2">
-                        <div className="w-12 h-12 relative bg-muted rounded overflow-hidden flex-shrink-0">
-                          {track.cover_image_url ? (
-                            <Image
-                              src={track.cover_image_url}
-                              alt={track.release_title}
-                              fill
-                              className="object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Music2 className="w-6 h-6 text-muted-foreground" />
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="p-2">
-                        <div className="font-medium max-w-xs truncate" title={track.track_title}>
-                          {track.track_title}
-                        </div>
-                      </td>
-                      <td className="p-2">
-                        <div className="max-w-xs truncate" title={track.song_artist}>
-                          {track.song_artist}
-                        </div>
-                      </td>
-                      <td className="p-2">
-                        <div className="max-w-xs truncate text-muted-foreground" title={track.release_title}>
-                          {track.release_title}
-                        </div>
-                      </td>
-                      <td className="p-2 text-muted-foreground">
-                        {track.position || '-'}
-                      </td>
-                      <td className="p-2">
-                        {track.bpm ? (
-                          <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
-                            {track.bpm}
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </td>
-                      <td className="p-2">
-                        {track.key ? (
-                          <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-medium">
-                            {track.key}
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </td>
-                      <td className="p-2 text-muted-foreground">
-                        {track.camelot_key || '-'}
-                      </td>
-                      <td className="p-2">
-                        {track.energy_level ? (
-                          <span className="text-xs">
-                            {'⚡'.repeat(Math.min(track.energy_level, 10))}
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </td>
-                      <td className="p-2 text-muted-foreground">
-                        {formatDuration(track.duration_ms)}
-                      </td>
-                      <td className="p-2 text-muted-foreground">
-                        {track.year || '-'}
-                      </td>
-                      <td className="p-2">
-                        {track.format ? (
-                          <span className="text-xs bg-muted px-2 py-1 rounded">
-                            {track.format}
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </td>
-                      <td className="p-2">
-                        {track.genres && track.genres.length > 0 ? (
-                          <div className="flex flex-wrap gap-1 max-w-xs">
-                            {track.genres.slice(0, 2).map((genre) => (
-                              <span
-                                key={genre}
-                                className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded"
-                              >
-                                {genre}
-                              </span>
-                            ))}
-                            {track.genres.length > 2 && (
-                              <span className="text-xs text-muted-foreground">
-                                +{track.genres.length - 2}
-                              </span>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </td>
-                      <td className="p-2 text-muted-foreground text-xs">
-                        {track.version_info || track.version_type || '-'}
-                      </td>
-                      <td className="p-2">
-                        {track.source ? (
-                          <span className="text-xs capitalize">{track.source}</span>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </td>
-                      <td className="p-2 text-muted-foreground text-center">
-                        {track.play_count}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            {tracks.map((track) => (
+            <Card 
+              key={track.id} 
+              className="hover:bg-accent/50 transition-colors cursor-pointer"
+              onClick={() => setSelectedTrackId(track.id)}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-center gap-4">
+                  {/* Cover Art */}
+                  <div className="w-14 h-14 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                    {track.records?.cover_image_url ? (
+                      <Image
+                        src={track.records.cover_image_url}
+                        alt={track.title}
+                        width={56}
+                        height={56}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Music2 className="w-6 h-6 text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Track Info */}
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <div className="font-semibold truncate">
+                      {track.songs?.artist} - {track.title}
+                    </div>
+                    <div className="text-sm text-muted-foreground truncate">
+                      {track.records?.title}
+                      {track.records?.label && ` • ${track.records.label}`}
+                    </div>
+                    <div className="flex flex-wrap gap-2 items-center">
+                      {/* Genres */}
+                      {track.songs?.genres && track.songs.genres.length > 0 && (
+                        <>
+                          {track.songs.genres.slice(0, 2).map((genre) => (
+                            <span
+                              key={genre}
+                              className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full"
+                            >
+                              {genre}
+                            </span>
+                          ))}
+                        </>
+                      )}
+                      {/* Year/Era */}
+                      {track.records?.year && (
+                        <span className="text-xs text-muted-foreground">
+                          {track.records.year}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* BPM */}
+                  {track.bpm && (
+                    <div className="text-center min-w-[60px]">
+                      <div className="text-sm font-mono font-semibold">{track.bpm.toFixed(0)}</div>
+                      <div className="text-xs text-muted-foreground">BPM</div>
+                    </div>
+                  )}
+
+                  {/* Key */}
+                  {track.camelot_key && (
+                    <div className="text-center min-w-[50px]">
+                      <div className="text-sm font-mono font-semibold">{track.camelot_key}</div>
+                      <div className="text-xs text-muted-foreground">Key</div>
+                    </div>
+                  )}
+
+                  {/* Format Badge */}
+                  <div className="text-center min-w-[60px]">
+                    <div className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${
+                      track.records?.collection_type === 'digital'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-green-100 text-green-700'
+                    }`}>
+                      {track.records?.collection_type === 'digital' ? (
+                        <>
+                          <HardDrive className="w-3 h-3" />
+                          <span className="hidden sm:inline">Digital</span>
+                        </>
+                      ) : (
+                        <>
+                          <Disc3 className="w-3 h-3" />
+                          <span className="hidden sm:inline">Vinyl</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+          </div>
+          
+          {/* Load More Button */}
+          {hasMore && (
+            <div className="flex justify-center pt-4">
+              <Button
+                variant="outline"
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="gap-2"
+              >
+                {loadingMore ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Loading more...
+                  </>
+                ) : (
+                  <>
+                    Load More ({filteredCount - tracks.length} remaining)
+                  </>
+                )}
+              </Button>
             </div>
-          </CardContent>
-        </Card>
+          )}
+        </div>
       )}
+
+      {/* Track Detail Drawer */}
+      <TrackDetailDrawer
+        trackId={selectedTrackId}
+        onClose={() => setSelectedTrackId(null)}
+      />
     </div>
   );
 }
-

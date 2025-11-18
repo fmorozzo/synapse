@@ -59,7 +59,7 @@ export interface Database {
         Row: {
           id: string
           user_id: string
-          discogs_release_id: number
+          discogs_release_id: number | null
           title: string
           artist: string
           year: number | null
@@ -75,13 +75,19 @@ export interface Database {
           purchase_price: number | null
           purchase_currency: string | null
           location: string | null
+          collection_type: 'physical' | 'digital'
+          import_source: 'discogs' | 'rekordbox' | 'traktor' | 'serato' | 'denon' | 'virtualdj' | 'manual'
+          file_format: string | null
+          bitrate: number | null
+          sample_rate: number | null
+          digital_release_id: string | null
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
           user_id: string
-          discogs_release_id: number
+          discogs_release_id?: number | null
           title: string
           artist: string
           year?: number | null
@@ -97,13 +103,19 @@ export interface Database {
           purchase_price?: number | null
           purchase_currency?: string | null
           location?: string | null
+          collection_type?: 'physical' | 'digital'
+          import_source?: 'discogs' | 'rekordbox' | 'traktor' | 'serato' | 'denon' | 'virtualdj' | 'manual'
+          file_format?: string | null
+          bitrate?: number | null
+          sample_rate?: number | null
+          digital_release_id?: string | null
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
           user_id?: string
-          discogs_release_id?: number
+          discogs_release_id?: number | null
           title?: string
           artist?: string
           year?: number | null
@@ -119,6 +131,12 @@ export interface Database {
           purchase_price?: number | null
           purchase_currency?: string | null
           location?: string | null
+          collection_type?: 'physical' | 'digital'
+          import_source?: 'discogs' | 'rekordbox' | 'traktor' | 'serato' | 'denon' | 'virtualdj' | 'manual'
+          file_format?: string | null
+          bitrate?: number | null
+          sample_rate?: number | null
+          digital_release_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -360,6 +378,162 @@ export interface Database {
           is_public?: boolean
           likes_count?: number
           notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      track_metadata_sources: {
+        Row: {
+          id: string
+          track_id: string
+          user_id: string | null
+          source_type: 'rekordbox' | 'traktor' | 'spotify' | 'musicbrainz' | 'manual' | 'serato' | 'denon'
+          source_confidence: number
+          bpm: number | null
+          key: string | null
+          camelot_key: string | null
+          energy_level: number | null
+          metadata: Json | null
+          imported_at: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          track_id: string
+          user_id?: string | null
+          source_type: 'rekordbox' | 'traktor' | 'spotify' | 'musicbrainz' | 'manual' | 'serato' | 'denon'
+          source_confidence?: number
+          bpm?: number | null
+          key?: string | null
+          camelot_key?: string | null
+          energy_level?: number | null
+          metadata?: Json | null
+          imported_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          track_id?: string
+          user_id?: string | null
+          source_type?: 'rekordbox' | 'traktor' | 'spotify' | 'musicbrainz' | 'manual' | 'serato' | 'denon'
+          source_confidence?: number
+          bpm?: number | null
+          key?: string | null
+          camelot_key?: string | null
+          energy_level?: number | null
+          metadata?: Json | null
+          imported_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      rekordbox_data: {
+        Row: {
+          id: string
+          track_id: string
+          user_id: string
+          rekordbox_track_id: string | null
+          file_path: string | null
+          beatgrid: Json | null
+          waveform: Json | null
+          cue_points: Json | null
+          hot_cues: Json | null
+          memory_cues: Json | null
+          color: string | null
+          rating: number | null
+          comment: string | null
+          play_count: number
+          last_played_at: string | null
+          playlists: string[] | null
+          imported_from_file: string | null
+          imported_at: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          track_id: string
+          user_id: string
+          rekordbox_track_id?: string | null
+          file_path?: string | null
+          beatgrid?: Json | null
+          waveform?: Json | null
+          cue_points?: Json | null
+          hot_cues?: Json | null
+          memory_cues?: Json | null
+          color?: string | null
+          rating?: number | null
+          comment?: string | null
+          play_count?: number
+          last_played_at?: string | null
+          playlists?: string[] | null
+          imported_from_file?: string | null
+          imported_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          track_id?: string
+          user_id?: string
+          rekordbox_track_id?: string | null
+          file_path?: string | null
+          beatgrid?: Json | null
+          waveform?: Json | null
+          cue_points?: Json | null
+          hot_cues?: Json | null
+          memory_cues?: Json | null
+          color?: string | null
+          rating?: number | null
+          comment?: string | null
+          play_count?: number
+          last_played_at?: string | null
+          playlists?: string[] | null
+          imported_from_file?: string | null
+          imported_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      track_matches: {
+        Row: {
+          id: string
+          song_id: string
+          physical_track_id: string | null
+          digital_track_id: string | null
+          match_confidence: number | null
+          match_method: string | null
+          user_confirmed: boolean
+          confirmed_by: string | null
+          confirmed_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          song_id: string
+          physical_track_id?: string | null
+          digital_track_id?: string | null
+          match_confidence?: number | null
+          match_method?: string | null
+          user_confirmed?: boolean
+          confirmed_by?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          song_id?: string
+          physical_track_id?: string | null
+          digital_track_id?: string | null
+          match_confidence?: number | null
+          match_method?: string | null
+          user_confirmed?: boolean
+          confirmed_by?: string | null
+          confirmed_at?: string | null
           created_at?: string
           updated_at?: string
         }

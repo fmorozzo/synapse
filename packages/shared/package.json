@@ -9,10 +9,12 @@
     "clean": "rm -rf .turbo node_modules"
   },
   "dependencies": {
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
+    "@types/xml2js": "^0.4.14",
     "typescript": "^5.3.3"
   }
 }
